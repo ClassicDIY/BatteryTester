@@ -2,9 +2,9 @@
 
 18650 battery tester with bluetooth & android app
 
-![alt tag](https://farrelltonsolar.files.wordpress.com/2015/03/sunset.jpg)
+![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/Battery.png)
 
-![alt tag](https://github.com/graham22/SkyeTracker/blob/master/Pictures/V8%20Circuit.png)
+![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/IMG_20171101_204558.jpg)
 
 Used the following development tools;
 

@@ -1,0 +1,199 @@
+package ca.skyetracker.battery;
+
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
+
+public class MainActivity extends Activity {
+    private TabStripAdapter tabStripAdapter;
+    private SlidingTabLayout stl;
+    private ViewPager viewPager;
+    boolean isReceiverRegistered = false;
+
+    public ArrayList<RecordEntry> records[] = new ArrayList[4];
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        stl = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
+        stl.setDividerColors(Color.RED);
+        stl.setSelectedIndicatorColors(Color.GREEN, Color.MAGENTA, Color.YELLOW, Color.WHITE, Color.CYAN);
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        setupActionBar();
+        checkBTState();
+        records[0] = new ArrayList<RecordEntry>();
+        records[1] = new ArrayList<RecordEntry>();
+        records[2] = new ArrayList<RecordEntry>();
+        records[3] = new ArrayList<RecordEntry>();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList("record0", records[0]);
+        outState.putParcelableArrayList("record1", records[1]);
+        outState.putParcelableArrayList("record2", records[2]);
+        outState.putParcelableArrayList("record3", records[3]);
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey("record0")) {
+                records[0] = savedInstanceState.getParcelableArrayList("record0");
+            } else {
+                records[0] = new ArrayList<RecordEntry>();
+            }
+            if (savedInstanceState.containsKey("record1")) {
+                records[1] = savedInstanceState.getParcelableArrayList("record1");
+            } else {
+                records[1] = new ArrayList<RecordEntry>();
+            }
+            if (savedInstanceState.containsKey("record2")) {
+                records[2] = savedInstanceState.getParcelableArrayList("record2");
+            } else {
+                records[2] = new ArrayList<RecordEntry>();
+            }
+            if (savedInstanceState.containsKey("record3")) {
+                records[3] = savedInstanceState.getParcelableArrayList("record3");
+            } else {
+                records[3] = new ArrayList<RecordEntry>();
+            }
+        }
+    }
+
+    private void setupActionBar() {
+        tabStripAdapter = new TabStripAdapter(getFragmentManager(), this, viewPager, stl, new ViewPager.OnPageChangeListener() {
+
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            // This method will be invoked when a new page becomes selected.
+            @Override
+            public void onPageSelected(int position) {
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+        Bundle b = new Bundle();
+        b.putInt("Index", 0);
+        tabStripAdapter.addTab(R.string.One, InfoTab.class, b);
+        b = new Bundle();
+        b.putInt("Index", 1);
+        tabStripAdapter.addTab(R.string.Two, InfoTab.class, b);
+        b = new Bundle();
+        b.putInt("Index", 2);
+        tabStripAdapter.addTab(R.string.Three, InfoTab.class, b);
+        b = new Bundle();
+        b.putInt("Index", 3);
+        tabStripAdapter.addTab(R.string.Four, InfoTab.class, b);
+        tabStripAdapter.notifyTabsChanged();
+
+    }
+
+    private void checkBTState() {
+        // Check for Bluetooth support and then check to make sure it is turned on
+        // Emulator doesn't support Bluetooth and will return null
+        BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (btAdapter == null) {
+            errorExit("Fatal Error", "Bluetooth not support");
+        } else {
+            if (btAdapter.isEnabled()) {
+                Log.d(Constants.TAG, "...Bluetooth ON...");
+            } else {
+                //Prompt user to turn on Bluetooth
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
+            }
+        }
+    }
+
+    private void errorExit(String title, String message) {
+        Toast.makeText(getBaseContext(), title + " - " + message, Toast.LENGTH_LONG).show();
+        finish();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!isReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this).registerReceiver(mBluetoothReceiver, new IntentFilter("ca.skyetracker.battery.bluetooth"));
+            LocalBroadcastManager.getInstance(this).registerReceiver(mReadingsReceiver, new IntentFilter("ca.skyetracker.battery.cell"));
+            isReceiverRegistered = true;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isReceiverRegistered) {
+            try {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(mBluetoothReceiver);
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(mReadingsReceiver);
+            } catch (IllegalArgumentException e) {
+                // Do nothing
+            }
+            isReceiverRegistered = false;
+        }
+    }
+
+    private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Boolean connected = intent.getBooleanExtra("connected", false);
+            Gson gson = new Gson();
+            try {
+                if (connected) {
+                    getActionBar().setTitle("Connected");
+                } else {
+                    getActionBar().setTitle("Not Connected!");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    };
+
+    protected BroadcastReceiver mReadingsReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String json = intent.getStringExtra("json");
+            Gson gson = new Gson();
+            try {
+                Transfer cellTransfer = gson.fromJson(json, Transfer.class );
+                if (cellTransfer.sS  == 3) {
+                    int index = cellTransfer.sN;
+                    ArrayList<RecordEntry> record = records[index];
+                    if (record.size() > 10000) {
+                        record.remove(0);
+                    }
+                    record.add(new RecordEntry(cellTransfer.sV, cellTransfer.sQ));
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    };
+}

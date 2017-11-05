@@ -2,7 +2,7 @@
 
 18650 battery tester with bluetooth & android app
 
-![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/Battery.png)
+![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/Battery2.png)
 
 ![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/IMG_20171101_204558.jpg)
 

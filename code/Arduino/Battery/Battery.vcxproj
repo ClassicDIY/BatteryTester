@@ -14,7 +14,7 @@
     <ProjectGuid>{1EC0AB16-B181-4A18-B52B-8ABDE6913827}</ProjectGuid>
     <RootNamespace>
     </RootNamespace>
-    <ProjectName>Capacity</ProjectName>
+    <ProjectName>Battery</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -48,8 +48,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Capacity;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\Wire\src;$(ProjectDir)..\libraries\LiquidCrystal_I2C;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\SoftwareSerial\src;$(ProjectDir)..\libraries\Adafruit_ADS1X15-master;$(ProjectDir)..\libraries\MUX74HC4067-master;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\libraries\Wire\src\utility;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\libraries;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;$(ProjectDir)..\libraries;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\tools\avr\avr\include\;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\tools\avr\avr\include\avr\;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\tools\avr\lib\gcc\avr\4.8.1\include;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\tools\avr\lib\gcc\avr\4.9.2\include;$(ProjectDir)..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\tools\avr\lib\gcc\avr\4.9.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)__vm\.Capacity.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries\Wire\src;$(ProjectDir)..\..\..\..\..\Arduino\libraries\LiquidCrystal_I2C;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries\SoftwareSerial\src;$(ProjectDir)..\..\..\..\..\Arduino\libraries\Adafruit_ADS1X15-master;$(ProjectDir)..\..\..\..\..\Arduino\libraries\MUX74HC4067-master;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries\Wire\src\utility;$(ProjectDir)..\..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\libraries;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries;$(ProjectDir)..\..\..\..\..\Arduino\libraries;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\cores\arduino;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\variants\eightanaloginputs;$(ProjectDir)..\Battery;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\avr\;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.8.1\include;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.9.2\include;$(ProjectDir)..\..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.9.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ProjectDir)__vm\.Battery.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;F_CPU=16000000L;ARDUINO=10801;ARDUINO_AVR_NANO;ARDUINO_ARCH_AVR;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -75,13 +75,13 @@
     <ProjectCapability Include="VisualMicro" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Capacity.ino">
+    <None Include="Battery.ino">
       <FileType>CppCode</FileType>
     </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Discharger.h" />
-    <ClInclude Include="__vm\.Capacity.vsarduino.h" />
+    <ClInclude Include="__vm\.Battery.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Discharger.cpp" />

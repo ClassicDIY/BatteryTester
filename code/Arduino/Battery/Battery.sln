@@ -3,11 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Capacity", "Capacity.vcxproj", "{1EC0AB16-B181-4A18-B52B-8ABDE6913827}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ADS1115", "..\ADS1115\ADS1115.vcxproj", "{8D63E135-EA9A-49FE-90B1-87F4C6CF098B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MUX74HC4067-master", "..\libraries\MUX74HC4067-master\MUX74HC4067-master.vcxitems", "{D9414DF5-27E4-4348-8525-A89450F3D01A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Battery", "Battery.vcxproj", "{1EC0AB16-B181-4A18-B52B-8ABDE6913827}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +15,6 @@ Global
 		{1EC0AB16-B181-4A18-B52B-8ABDE6913827}.Debug|x86.Build.0 = Debug|Win32
 		{1EC0AB16-B181-4A18-B52B-8ABDE6913827}.Release|x86.ActiveCfg = Release|Win32
 		{1EC0AB16-B181-4A18-B52B-8ABDE6913827}.Release|x86.Build.0 = Release|Win32
-		{8D63E135-EA9A-49FE-90B1-87F4C6CF098B}.Debug|x86.ActiveCfg = Debug|Win32
-		{8D63E135-EA9A-49FE-90B1-87F4C6CF098B}.Debug|x86.Build.0 = Debug|Win32
-		{8D63E135-EA9A-49FE-90B1-87F4C6CF098B}.Release|x86.ActiveCfg = Release|Win32
-		{8D63E135-EA9A-49FE-90B1-87F4C6CF098B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Capacity.ino" />
+    <None Include="Battery.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Discharger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="__vm\.Capacity.vsarduino.h">
+    <ClInclude Include="__vm\.Battery.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

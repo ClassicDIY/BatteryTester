@@ -4,6 +4,17 @@
 
 #include "Discharger.h"
 
+Discharger::Discharger(Adafruit_ADS1115 * ads, MUX74HC4067 * mux, int channel, int gatePin, int tp4056Enable, int tp4056Standby)
+{
+	_ads = ads;
+	_mux = mux;
+	_Channel = channel;
+	_gatePin = gatePin;
+	_config = MUX;
+	_tp4056Enable = tp4056Enable;
+	_tp4056Standby = tp4056Standby;
+}
+
 Discharger::Discharger(Adafruit_ADS1115 * ads, MUX74HC4067 * mux, int channel, int gatePin)
 {
 	_ads = ads;
@@ -33,13 +44,18 @@ Discharger::Discharger(int highShuntPin, int lowShuntPin, int gatePin)
 
 Discharger::~Discharger()
 {
+	Load_Off();
+	TP4056_Off();
 }
 
 void Discharger::Init()
 {
 	_state = Standby;
 	pinMode(_gatePin, OUTPUT);
-	digitalWrite(_gatePin, LOW); // turn off load
+	pinMode(_tp4056Enable, OUTPUT); 
+	pinMode(_tp4056Standby, INPUT);
+	TP4056_Off();
+	Load_Off();
 	_index = 0;
 	for (int i = 0; i < SAMPLESIZE; i++)
 	{
@@ -50,53 +66,62 @@ void Discharger::Init()
 boolean Discharger::MeasureInternalResistance()
 {
 	boolean rVal = false;
-	digitalWrite(_gatePin, LOW);
+	Load_Off();
+	_state = MeasuringResistance;
 	delay(1000);
 	float voc = BatteryVolt();
 	Serial.print("voc: "); Serial.println(voc);
 	if (voc > 2.0) { // battery inserted?
-		digitalWrite(_gatePin, LOW);
+		Load_Off();
 		delay(20);
 		_level = 127;
 		FindCurrent(5);
 		float level5 = _level;
 		float v5 = BatteryVolt() * 1000;
 		float i5 = BatteryCurrent();
-		digitalWrite(_gatePin, HIGH);
+		Load_On();
 		delay(2000);
-
 		float vLoad = BatteryVolt() * 1000;
 		float iMax = BatteryCurrent();
-		digitalWrite(_gatePin, LOW);
+		Load_Off();
 		if (Temperature() >= _cutoffTemperature) {
 			_state = ThermalShutdown;
 		}
 		_internalResistance = ((v5 - vLoad) / (iMax - i5)) * 1000;
-		Serial.print("Resistance: "); Serial.print(_internalResistance); Serial.print(" v5: "); Serial.print(v5); Serial.print(" v500: "); Serial.print(vLoad); Serial.print(" dV: "); Serial.print(v5 - vLoad); Serial.print(" i5: "); Serial.print(i5); Serial.print(" i500: "); Serial.print(iMax); Serial.print(" dI: "); Serial.print(iMax - i5); Serial.print(" level 5: "); Serial.print(level5);
+		Serial.print("Resistance: "); Serial.print(_internalResistance); Serial.print(" v5: "); Serial.print(v5); Serial.print(" v500: "); Serial.print(vLoad); Serial.print(" dV: "); Serial.print(v5 - vLoad); Serial.print(" i5: "); Serial.print(i5); Serial.print(" i500: "); Serial.print(iMax); Serial.print(" dI: "); Serial.print(iMax - i5); Serial.print(" level 5: "); Serial.println(level5);
 		rVal = true;
 	}
-	digitalWrite(_gatePin, LOW);
+	Load_Off();
 	return rVal;
 }
 
-State Discharger::Discharge()
+State Discharger::Cycle()
 {
-
 	if (_state == Standby) {
+		Load_Off();
 		float voc = BatteryVolt();
 		if (voc < 2.0) { // battery inserted?
 			_state = NoBatteryFound;
+			Serial.print(_gatePin); Serial.println(" NoBatteryFound ");
 		}
 		else {
-			_state = Discharging;
-			digitalWrite(_gatePin, HIGH);
+			_state = InitialCharge;
+			TP4056_On();
+			Serial.print(_gatePin); Serial.println(" InitialCharge ");
+		}
+	}
+	if (_state == InitialCharge) {
+		if (TP4056_OnStandby()) {
+			Serial.print(_gatePin); Serial.println(" tp4056Standby => MeasureInternalResistance ");
+			TP4056_Off(); 
+			MeasureInternalResistance();
+			Serial.print(_gatePin); Serial.println(" MeasureInternalResistance => Discharge ");
+			_state = Discharge;
+			Load_On();
 			_totalMillis = millis();
 		}
 	}
-	Serial.print(_gatePin); Serial.print(" state: "); Serial.println(_state);
-
-	if (_state == Discharging) {
-
+	if (_state == Discharge) {
 		float battVolt = BatteryVolt();
 		float current = BatteryCurrent();
 		if (battVolt >= _battLow)
@@ -108,14 +133,25 @@ State Discharger::Discharge()
 		}
 		if (battVolt < _battLow)
 		{
-			digitalWrite(_gatePin, LOW);
+			Load_Off();
 			_totalMillis = millis() - _totalMillis;
+			_state = FinalCharge;
+			TP4056_On();
+			Serial.print(_gatePin); Serial.println(" Discharge => FinalCharge ");
+		}
+	}
+	if (_state == FinalCharge) {
+		if (TP4056_OnStandby()) {
+			TP4056_Off(); 
 			_state = Complete;
+			Serial.print(_gatePin); Serial.println(" FinalCharge ==> Complete ");
 		}
 	}
 	if (Temperature() >= _cutoffTemperature) {
 		_state = ThermalShutdown;
-		digitalWrite(_gatePin, LOW);
+		Load_Off(); 
+		TP4056_Off();
+		Serial.print(_gatePin); Serial.println(" ThermalShutdown ");
 	}
 	return _state;
 }
@@ -268,6 +304,31 @@ float Discharger::Diff()
 	}
 }
 
+void Discharger::TP4056_Off()
+{
+	digitalWrite(_tp4056Enable, LOW);
+}
+
+boolean Discharger::TP4056_OnStandby()
+{
+	return digitalRead(_tp4056Standby) == LOW;
+}
+
+void Discharger::TP4056_On()
+{
+	digitalWrite(_tp4056Enable, HIGH);
+}
+
+void Discharger::Load_Off()
+{
+	digitalWrite(_gatePin, LOW);
+}
+
+void Discharger::Load_On()
+{
+	digitalWrite(_gatePin, HIGH);
+}
+
 unsigned long Discharger::BatteryCurrent()
 {
 	float current = 0.0;
@@ -286,13 +347,16 @@ unsigned long Discharger::Capacity()
 	return _mAh;
 }
 
-unsigned long Discharger::ElapsedTime()
+unsigned long Discharger::DischargeTime()
 {
-	if (_state == Discharging) {
+	if (_state == Discharge) {
 		return (millis() - _totalMillis) / 1000;
 	}
-	else {
+	else if (_state == FinalCharge || _state == Complete) {
 		return _totalMillis / 1000;
+	}
+	else {
+		return 0;
 	}
 }
 

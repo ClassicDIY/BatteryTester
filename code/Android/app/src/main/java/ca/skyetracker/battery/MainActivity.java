@@ -17,12 +17,14 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
+import static ca.skyetracker.battery.State.Discharge;
+
 public class MainActivity extends Activity {
     private TabStripAdapter tabStripAdapter;
     private SlidingTabLayout stl;
     private ViewPager viewPager;
     boolean isReceiverRegistered = false;
-
+    int last_sQ = -1;
     public ArrayList<RecordEntry> records[] = new ArrayList[4];
 
     @Override
@@ -182,7 +184,8 @@ public class MainActivity extends Activity {
             Gson gson = new Gson();
             try {
                 Transfer cellTransfer = gson.fromJson(json, Transfer.class );
-                if (cellTransfer.sS  == 3) {
+                if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
+                    last_sQ = cellTransfer.sQ;
                     int index = cellTransfer.sN;
                     ArrayList<RecordEntry> record = records[index];
                     if (record.size() > 10000) {

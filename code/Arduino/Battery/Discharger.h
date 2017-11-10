@@ -14,7 +14,9 @@ enum State {
 	Standby,
 	NoBatteryFound,
 	MeasuringResistance,
-	Discharging,
+	InitialCharge,
+	Discharge,
+	FinalCharge,
 	ThermalShutdown,
 	Complete
 };
@@ -25,6 +27,8 @@ class Discharger
 	int _lowShuntPin;
 	int _gatePin;
 	int _Channel;
+	int _tp4056Enable;
+	int _tp4056Standby;
 	boolean _discharging;
 	boolean _standby = false;
 	int _config;
@@ -45,24 +49,32 @@ class Discharger
 	State _state;
 
 public:
+	Discharger(Adafruit_ADS1115* ads, MUX74HC4067* mux, int channel, int gatePin, int tp4056Enable, int tp4056Standby);
 	Discharger(Adafruit_ADS1115* ads, MUX74HC4067* mux, int channel, int gatePin);
 	Discharger(Adafruit_ADS1115* ads, int highShuntPin, int lowShuntPin, int gatePin);
 	Discharger(int highShuntPin, int lowShuntPin, int gatePin);
 	~Discharger();
 	void Init();
 	boolean MeasureInternalResistance();
-	State Discharge();
-	void FindCurrent(float targetCurrent);
-	float AdjustLevel(float targetCurrent);
+	State Cycle();
 	unsigned long InternalResistance();
 	String InternalResistanceRanking();
 	float BatteryVolt();
 	float ShuntVolt();
-	float Diff();
 	unsigned long BatteryCurrent();
 	unsigned long Capacity();
-	unsigned long ElapsedTime();
+	unsigned long DischargeTime();
 	float Temperature();
 	int State();
+
+private:
+	void FindCurrent(float targetCurrent);
+	float AdjustLevel(float targetCurrent);
+	float Diff();
+	void TP4056_Off();
+	boolean TP4056_OnStandby();
+	void TP4056_On();
+	void Load_Off();
+	void Load_On();
 };
 

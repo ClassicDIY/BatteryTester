@@ -29,6 +29,8 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.gson.Gson;
 
+import static ca.skyetracker.battery.State.Discharge;
+
 /**
  * Created by Me on 9/30/2015.
  */
@@ -37,6 +39,7 @@ public class InfoTab extends Fragment {
     TextView textState, textEnergy, textTime, textVoltage, textCurrent, textResistance, textTemperature;
     Context context;
     int index;
+    private int last_sQ;
 
     @Nullable
     @Override
@@ -73,10 +76,13 @@ public class InfoTab extends Fragment {
 //        Standby,
 //        NoBatteryFound,
 //        MeasuringResistance,
-//        Discharging,
+//        InitialCharge,
+//        Discharge,
+//        FinalCharge,
 //        ThermalShutdown,
 //        Complete
 //    };
+
 
     protected BroadcastReceiver mReadingsReceiver = new BroadcastReceiver() {
         @Override
@@ -86,23 +92,29 @@ public class InfoTab extends Fragment {
             try {
                 Transfer cellTransfer = gson.fromJson(json, Transfer.class );
                 if (cellTransfer.sN == index) {
-                    switch (cellTransfer.sS) {
-                        case 0:
+                    switch (State.fromInt(cellTransfer.sS)) {
+                        case Standby:
                             textState.setText("Standby");
                             break;
-                        case 1:
+                        case NoBatteryFound:
                             textState.setText("No Battery");
                             break;
-                        case 2:
+                        case MeasuringResistance:
                             textState.setText("Measuring Resistance");
                             break;
-                        case 3:
+                        case InitialCharge:
+                            textState.setText("Inital Charge");
+                            break;
+                        case Discharge:
                             textState.setText("Discharging");
                             break;
-                        case 4:
+                        case FinalCharge:
+                            textState.setText("Final Charge");
+                            break;
+                        case ThermalShutdown:
                             textState.setText("Thermal Shutdown");
                             break;
-                        case 5:
+                        case Complete:
                             textState.setText("Complete");
                             break;
                     }
@@ -114,7 +126,8 @@ public class InfoTab extends Fragment {
                     int minutes = cellTransfer.sE / 60;
                     int seconds = cellTransfer.sE % 60;
                     textTime.setText(String.format("%s:%s m:s", minutes, seconds));
-                    if (cellTransfer.sS == 3) {
+                    if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
+                        last_sQ = cellTransfer.sQ;
                         addEntry(cellTransfer.sV, cellTransfer.sQ);
                     }
                 }

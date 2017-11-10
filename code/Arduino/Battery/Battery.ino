@@ -15,7 +15,7 @@ LiquidCrystal_I2C _lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 20 cha
 Adafruit_ADS1115 _ads;
 MUX74HC4067 _mux(13, 2, 3, 4, 5);
 
-Discharger _dischargers[4] = { Discharger(&_ads, &_mux, 12, 11) , Discharger(&_ads, &_mux, 13, 10), Discharger(&_ads, &_mux, 14, 9) , Discharger(&_ads, &_mux, 15, 6) };
+Discharger _dischargers[4] = { Discharger(&_ads, &_mux, 12, 11) , Discharger(&_ads, &_mux, 13, 10), Discharger(&_ads, &_mux, 14, 9) , Discharger(&_ads, &_mux, 15, 6, 15, 14) };
 int _lcdRefresh = 0;
 
 boolean _finished = false;
@@ -41,32 +41,24 @@ void setup() {
 	_lcd.clear();
 	for (int index = 0; index < 4; index++) {
 		_dischargers[index].Init();
-	}
-	_lcd.print("Measuring resistance");
-	delay(500);
-	_lcd.clear();
-	for (int index = 0; index < 4; index++) {
-		if (_dischargers[index].MeasureInternalResistance()) {
-			BroadcastInitalState(index);
-			_lcd.setCursor(0, index);
-			_lcd.print("IR: ");
-			_lcd.print(_dischargers[index].InternalResistance());
-			_lcd.print("mO ");
-			_lcd.print(_dischargers[index].InternalResistanceRanking());
-		}
+		BroadcastInitalState(index);
+		_lcd.setCursor(0, index);
+		_lcd.print(_dischargers[index].BatteryVolt());
+		_lcd.print("V ");
+		_lcd.print(_dischargers[index].Temperature());
+		_lcd.print("C");
 	}
 	delay(5000);
 }
 
 void loop() {
-
 	if (_lcdRefresh == 0) {
 		_lcd.clear();
 		_lcdRefresh = 10;
 	}
 	_lcdRefresh--;
 	for (int index = 0; index < 4; index++) {
-		_dischargers[index].Discharge();
+		_dischargers[index].Cycle();
 		UpdateLCD(index);
 		BroadcastDischargingState(index);
 	}
@@ -74,33 +66,52 @@ void loop() {
 }
 
 void UpdateLCD(int index) {
-	unsigned long elapsed = _dischargers[index].ElapsedTime();
-	int minutes = numberOfMinutes(elapsed);
-	int seconds = numberOfSeconds(elapsed);
-	char time[10];
-	sprintf(time, "%i:%02i", minutes, seconds);
 	char mah[10];
-	sprintf(mah, "%5u", _dischargers[index].Capacity());
+	sprintf(mah, "%5.5u", _dischargers[index].Capacity());
 	_lcd.setCursor(0, index);
-
-	if (_dischargers[index].State() == Complete) {
-		_lcd.print("*");
+	switch (_dischargers[index].State())
+	{
+	case Standby:
+		_lcd.print("Standby");
+		break;
+	case NoBatteryFound:
+		_lcd.print("No Battery");
+		break;
+	case MeasuringResistance:
+		_lcd.print("Measuring Resistance");
+		break;
+	case InitialCharge:
 		_lcd.print(_dischargers[index].BatteryVolt());
-		_lcd.print(" ");
-		_lcd.print(mah);
-		_lcd.print(" ");
-		_lcd.print(time);
-	}
-	else if (_dischargers[index].State() == ThermalShutdown) {
-		_lcd.print("***ThermalShutdown***");
-	}
-	else {
+		_lcd.print("V ");
+		_lcd.print(_dischargers[index].Temperature(), 1);
+		_lcd.print("C");
+		break;
+	case Discharge:
 		_lcd.print(" ");
 		_lcd.print(_dischargers[index].BatteryVolt());
 		_lcd.print(" ");
 		_lcd.print(_dischargers[index].BatteryCurrent());
 		_lcd.print(" ");
 		_lcd.print(mah);
+		break;
+	case FinalCharge:
+		_lcd.print(_dischargers[index].BatteryVolt());
+		_lcd.print(" ");
+		_lcd.print(mah);
+		_lcd.print(" ");
+		_lcd.print(_dischargers[index].InternalResistance());
+		break;
+	case ThermalShutdown:
+		_lcd.print("***ThermalShutdown***");
+		break;
+	case Complete:
+		_lcd.print("*");
+		_lcd.print(_dischargers[index].BatteryVolt());
+		_lcd.print(" ");
+		_lcd.print(mah);
+		_lcd.print(" ");
+		_lcd.print(_dischargers[index].InternalResistance());
+		break;
 	}
 }
 
@@ -111,8 +122,6 @@ void BroadcastInitalState(int index) {
 	_BlueTooth.print(",\"sV\":");
 	_BlueTooth.print(_dischargers[index].BatteryVolt());
 	_BlueTooth.print(",\"sR\":");
-	_BlueTooth.print(_dischargers[index].InternalResistance());
-	_BlueTooth.print(",\"sT\":");
 	_BlueTooth.print(_dischargers[index].Temperature());
 	_BlueTooth.println("}");
 }
@@ -134,6 +143,6 @@ void BroadcastDischargingState(int index) {
 	_BlueTooth.print(",\"sT\":");
 	_BlueTooth.print(_dischargers[index].Temperature());
 	_BlueTooth.print(",\"sE\":");
-	_BlueTooth.print(_dischargers[index].ElapsedTime());
+	_BlueTooth.print(_dischargers[index].DischargeTime());
 	_BlueTooth.println("}");
 }

@@ -1,6 +1,7 @@
 package ca.skyetracker.battery;
 
 public enum State {
+    Initialized,
     Standby,
     NoBatteryFound,
     MeasuringResistance,

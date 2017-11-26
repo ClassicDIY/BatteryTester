@@ -37,7 +37,6 @@ public class BlueTooth extends IntentService {
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
      */
     public BlueTooth() {
         super("BlueTooth");
@@ -52,14 +51,8 @@ public class BlueTooth extends IntentService {
             public void handleMessage(android.os.Message msg) {
                 switch (msg.what) {
                     case RECEIVE_MESSAGE: // if receive message
-
                         String strIncom = (String) msg.obj;
-                        if (strIncom.indexOf("|") > 0) {
-                            String[] tupple = strIncom.split("\\|");
-                            if (tupple[0].equals("Cell")) {
-                                BroadcastMessage(tupple[1], "ca.skyetracker.battery.cell");
-                            }
-                        }
+                        BroadcastMessage(strIncom, "ca.skyetracker.battery.cell");
                         Log.d(Constants.TAG, "...String:" + strIncom + "Byte:" + msg.arg1 + "...");
                         break;
                 }
@@ -68,6 +61,7 @@ public class BlueTooth extends IntentService {
         startBluetoothStateBroadcast();
         LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(mCommandReceiver, new IntentFilter("ca.skyetracker.battery.Write"));
     }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d(Constants.TAG, String.format("BlueTooth onHandleIntent action: %s", intent.getAction()));
@@ -126,9 +120,21 @@ public class BlueTooth extends IntentService {
         return rVal;
     }
 
-    private void BroadcastMessage(String json, String action) {
+//    public class Transfer implements Serializable {
+//        public int sN;
+//        public int sS;
+//        public int sR;
+//        public float sV;
+//        public int sI;
+//        public int sQ;
+//        public float sT;
+//        public int sE;
+//    }
+
+    private void BroadcastMessage(String data, String action) {
         Intent commandIntent = new Intent(action, null, getBaseContext(), BlueTooth.class);
-        commandIntent.putExtra("json", json);
+        Transfer transfer = new Transfer(data);
+        commandIntent.putExtra("cell", transfer);
         LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(commandIntent);
     }
 
@@ -309,12 +315,12 @@ public class BlueTooth extends IntentService {
         private final Context mContext;
         String mText;
 
-        public DisplayToast(Context mContext, String text){
+        public DisplayToast(Context mContext, String text) {
             this.mContext = mContext;
             mText = text;
         }
 
-        public void run(){
+        public void run() {
             Toast.makeText(mContext, mText, Toast.LENGTH_SHORT).show();
         }
     }

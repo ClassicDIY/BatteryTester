@@ -12,7 +12,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">left</item>
         <item name="android:textColor">@color/material_blue_grey_800</item>
-        <item name="android:textSize">@dimen/abc_text_size_display_1_material</item>
+        <item name="android:textSize">@dimen/abc_text_size_body_1_material</item>
         <item name="android:typeface">sans</item>
     </style>
 
@@ -21,7 +21,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center</item>
         <item name="android:textColor">@color/material_blue_grey_800</item>
-        <item name="android:textSize">@dimen/abc_text_size_display_1_material</item>
+        <item name="android:textSize">@dimen/abc_text_size_body_1_material</item>
         <item name="android:typeface">sans</item>
     </style>
 
@@ -33,7 +33,7 @@
         <item name="android:gravity">left</item>
         <item name="android:textColor">@color/Black</item>
         <item name="android:shadowColor">@color/WhiteSmoke</item>
-        <item name="android:textSize">@dimen/abc_text_size_display_1_material</item>
+        <item name="android:textSize">@dimen/abc_text_size_body_1_material</item>
         <item name="android:typeface">monospace</item>
         <item name="android:shadowDx">1</item>
         <item name="android:shadowDy">1</item>

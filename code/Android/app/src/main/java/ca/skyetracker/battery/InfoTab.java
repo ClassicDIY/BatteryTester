@@ -27,7 +27,6 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.google.gson.Gson;
 
 import static ca.skyetracker.battery.State.Discharge;
 
@@ -87,12 +86,13 @@ public class InfoTab extends Fragment {
     protected BroadcastReceiver mReadingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String json = intent.getStringExtra("json");
-            Gson gson = new Gson();
             try {
-                Transfer cellTransfer = gson.fromJson(json, Transfer.class );
+                Transfer cellTransfer = (Transfer)intent.getSerializableExtra("cell");
                 if (cellTransfer.sN == index) {
                     switch (State.fromInt(cellTransfer.sS)) {
+                        case Initialized:
+                            textState.setText("Initialized");
+                            break;
                         case Standby:
                             textState.setText("Standby");
                             break;

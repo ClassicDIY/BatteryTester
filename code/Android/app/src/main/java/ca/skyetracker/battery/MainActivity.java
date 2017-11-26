@@ -12,9 +12,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
-
 import java.util.ArrayList;
 
 import static ca.skyetracker.battery.State.Discharge;
@@ -164,7 +161,6 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Boolean connected = intent.getBooleanExtra("connected", false);
-            Gson gson = new Gson();
             try {
                 if (connected) {
                     getActionBar().setTitle("Connected");
@@ -180,10 +176,8 @@ public class MainActivity extends Activity {
     protected BroadcastReceiver mReadingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String json = intent.getStringExtra("json");
-            Gson gson = new Gson();
             try {
-                Transfer cellTransfer = gson.fromJson(json, Transfer.class );
+                Transfer cellTransfer = (Transfer)intent.getSerializableExtra("cell");
                 if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
                     last_sQ = cellTransfer.sQ;
                     int index = cellTransfer.sN;

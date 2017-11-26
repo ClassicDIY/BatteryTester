@@ -36,6 +36,24 @@ public class Transfer implements Serializable {
     public int sQ;
     public float sT;
     public int sE;
-}
 
-;
+    public Transfer(String data ) {
+        String line = data.substring(1, data.length() -1);
+        String[] tokens = line.split(",");
+        if (tokens.length == 8) {
+            try {
+                sN = Integer.parseInt(tokens[0]);
+                sS = Integer.parseInt(tokens[1]);
+                sR = Integer.parseInt(tokens[2]);
+                sV = Integer.parseInt(tokens[3]);
+                sI = Integer.parseInt(tokens[4]);
+                sQ = Integer.parseInt(tokens[5]);
+                sT = Integer.parseInt(tokens[6]);
+                sE = Integer.parseInt(tokens[7]);
+            }
+            catch (Exception ex){
+                String err = line;
+            }
+        }
+    }
+};

@@ -15,7 +15,7 @@ int _topIndex = -1;
 void setup() {
 	_receiveBuffer = (char*)malloc(RECEIVE_BUFFER);
 	swSerial.begin(9600);
-	Serial.begin(9600); // send swSerial data at 9600 bits/sec
+	Serial.begin(9600);
 	delay(200);
 	swSerial.println("TinyHost");
 	Serial.print("[?]");
@@ -28,16 +28,16 @@ void setup() {
 void loop() {
 	if (_topIndex != -1) {
 		char buffer[8];
-		sprintf(buffer, "[%02d]", _receiveIndex);
+		sprintf(buffer, "[%x]", _receiveIndex);
 		Serial.print(buffer);
 		_receiveIndex++;
 		if (_receiveIndex > _topIndex) {
 			_receiveIndex = 0;
 		}
-		delay(500);
+		delay(600);
 	}
 	serialEvent();
-	delay(500);
+	delay(600);
 }
 
 void serialEvent() {
@@ -47,20 +47,22 @@ void serialEvent() {
 		String receiver = Serial.readStringUntil(']');
 		Serial.read();
 		swSerial.print(receiver); swSerial.println("]");
+
 		if (receiver.length() < 5) {
 			int j = 0;
 			for (int i = 0; i < receiver.length(); i++) {
 				if (receiver[i] == '?') {
+					_topIndex = -1;
 					return;
 				}
-				else if (receiver[i] >= 0x30 && receiver[i] <= 0x39) {
+				else if ((receiver[i] >= 0x30 && receiver[i] <= 0x39) || (receiver[i] >= 0x41 && receiver[i] <= 0x46)) {
 					src[j++] = receiver[i];
 				}
 			}
 			src[j] = 0;
-			if (j == 2) {
+			if (_topIndex == -1) {
 				receiver = src;
-				_topIndex = receiver.substring(0, 2).toInt();
+				_topIndex = receiver.toInt();
 			}
 		}
 

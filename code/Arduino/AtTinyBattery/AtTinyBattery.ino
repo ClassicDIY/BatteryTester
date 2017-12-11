@@ -3,7 +3,7 @@
 #include "State.h"
 
 //#define OscillatorCalibration 125 // OSCCAL value
-#define InternalResistanceCalibration 300 // resistance from battery holder/wires (mOhms).
+//#define InternalResistanceCalibration 300 // resistance from battery holder/wires (mOhms).
 #define ThermometerCalibration -30 // mcp9700 offset value (0.1 °C)
 #define ThermalShutdownTemperature 500 // °C * 10
 #define Rx 10
@@ -136,13 +136,18 @@ void loop()
 			}
 			uint32_t vLoad = Volt();
 			uint32_t iMax = Current();
-			_internalResistance = (voc - vLoad) - InternalResistanceCalibration;
+			_internalResistance = (voc - vLoad);
 			_internalResistance *= 1000;
 			_internalResistance /= (iMax - iMin);
-			_state = Discharge;
-			_previousMillis = millis();
-			_totalMillis = millis();
-			_mAs = 0;
+			if (_internalResistance < 1000) {
+				_state = Discharge;
+				_previousMillis = millis();
+				_totalMillis = millis();
+				_mAs = 0;
+			}
+			//else {
+			//	swSerial.print("voc "); swSerial.print(voc, HEX); swSerial.print(" iMin "); swSerial.print(iMin, HEX); swSerial.print(" vLoad "); swSerial.print(vLoad, HEX); swSerial.print(" iMax "); swSerial.println(iMax, HEX);
+			//}
 		}
 		break;
 		case Discharge:

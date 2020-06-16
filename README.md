@@ -2,6 +2,9 @@
 
 18650 battery tester with bluetooth & android app
 
+|If you find this project useful or interesting, please help support further development!|[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=graham.a.ross%40gmail.com&item_name=Support+BatteryTester+development&currency_code=USD&source=url)|
+|---|---|
+
 ![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/Screenshot_battery.png)
 
 ![alt tag](https://github.com/graham22/Battery/blob/master/Pictures/IMG_20171101_204558.jpg)

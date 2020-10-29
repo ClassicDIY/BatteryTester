@@ -1,0 +1,56 @@
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="175" width="440" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 439.99998 175">
+<rect height="175" width="440" y="0" x="0" fill="#fff"/>
+<g fill="#231f20" transform="translate(-140 -67.1)">
+<g>
+<path d="m405 140h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.37v8.69h0.312v-0.312 0.312"/>
+<path d="m405 122h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.37v8.69h0.312v-0.312 0.312"/>
+<path d="m405 158h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.37h8.37v8.69h0.312v-0.312 0.312"/>
+<path d="m405 176h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.37v8.69h0.312v-0.312 0.312"/>
+<path d="m324 140h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.37h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m324 122h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m324 158h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m324 176h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m396 237h0.625v-135h-73.2v136h73.2v-0.625h-0.625v-0.625h-71.4v-133h70.7v134h0.625v-0.625 0.625"/>
+<path d="m350 103c0 5.14 4.17 9.31 9.31 9.31s9.31-4.17 9.31-9.31h-0.625c0 2.4-0.971 4.57-2.54 6.14-1.58 1.57-3.74 2.54-6.14 2.54s-4.57-0.971-6.14-2.54-2.54-3.74-2.54-6.14h-0.625"/>
+<path d="m324 212h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.37h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m324 194h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m324 230h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.37h8.38v8.69h0.312v-0.312 0.312"/>
+<path d="m405 212h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.37h8.37v8.69h0.312v-0.312 0.312"/>
+<path d="m405 194h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.38h8.37v8.69h0.312v-0.312 0.312"/>
+<path d="m405 230h0.312v-9.31h-9.62v9.62h9.62v-0.312h-0.312v-0.312h-8.69v-8.37h8.37v8.69h0.312v-0.312 0.312"/>
+<text font-weight="bold" font-size="15px" y="82.913406" x="310.71198" font-family="Helvetica">
+<tspan font-weight="bold" font-size="15px" y="82.913406" x="310.71198" font-family="sans-serif">Attiny44/84</tspan>
+</text>
+</g>
+<g font-size="12.5px" font-family="sans-serif">
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="122.32739" x="307.16833" line-height="125%"><tspan x="307.16833" y="122.32739">(+) VCC</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="122.32739" x="413.38498" line-height="125%"><tspan x="413.38498" y="122.32739">GND (-)</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="140.25833" x="307.31482" line-height="125%"><tspan x="307.31482" y="140.25833">Pin 10</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="158.17458" x="307.36365" line-height="125%"><tspan x="307.36365" y="158.17458">Pin 9</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="175.70882" x="306.78381" line-height="125%"><tspan x="306.78381" y="175.70882">Reset</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="194.01083" x="307.33923" line-height="125%"><tspan x="307.33923" y="194.01083">(PWM Timer0) OC0A/Pin 8</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="211.93083" x="307.55286" line-height="125%"><tspan x="307.55286" y="211.93083">(PWM Timer0) OC0B/Pin 7</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="229.84833" x="307.27209" line-height="125%"><tspan x="307.27209" y="229.84833">(PWM Timer1) OC1A/Pin 6</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="140.33833" x="412.86008" line-height="125%"><tspan x="412.86008" y="140.33833">Pin 0</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="158.33708" x="412.86008" line-height="125%"><tspan x="412.86008" y="158.33708">Pin 1</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="176.33585" x="412.86008" line-height="125%"><tspan x="412.86008" y="176.33585">Pin 2</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="194.01083" x="412.86008" line-height="125%"><tspan x="412.86008" y="194.01083">Pin 3</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="211.93083" x="412.86008" line-height="125%"><tspan x="412.86008" y="211.93083">Pin 4</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="229.84833" x="412.86008" line-height="125%"><tspan x="412.86008" y="229.84833">Pin 5/OC1B (PWM Timer1)</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="121.95508" x="391.1655" line-height="125%"><tspan x="391.1655" y="121.95508">14</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="140.11862" x="391.46457" line-height="125%"><tspan x="391.46457" y="140.11862">13</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="158.11737" x="391.71481" line-height="125%"><tspan x="391.71481" y="158.11737">12</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="175.95132" x="391.61716" line-height="125%"><tspan x="391.61716" y="175.95132">11</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="193.79112" x="391.29367" line-height="125%"><tspan x="391.29367" y="193.79112">10</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="211.71112" x="391.3425" line-height="125%"><tspan x="391.3425" y="211.71112">9</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px;text-anchor:end;text-align:end" xml:space="preserve" y="229.62862" x="391.31808" line-height="125%"><tspan x="391.31808" y="229.62862">8</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="121.95508" x="329.83099" line-height="125%"><tspan x="329.83099" y="121.95508">1</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="140.03862" x="330.28876" line-height="125%"><tspan x="330.28876" y="140.03862">2</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="157.95486" x="330.25214" line-height="125%"><tspan x="330.25214" y="157.95486">3</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="175.70882" x="330.59393" line-height="125%"><tspan x="330.59393" y="175.70882">4</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="193.62633" x="330.23993" line-height="125%"><tspan x="330.23993" y="193.62633">5</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="211.71112" x="330.33148" line-height="125%"><tspan x="330.33148" y="211.71112">6</tspan></text>
+<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="229.46382" x="330.17889" line-height="125%"><tspan x="330.17889" y="229.46382">7</tspan></text>
+</g>
+</g>
+</svg>

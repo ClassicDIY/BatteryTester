@@ -229,14 +229,14 @@ public class BlueTooth extends IntentService {
     }
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-        if (Build.VERSION.SDK_INT >= 10) {
-            try {
-                final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", new Class[]{UUID.class});
-                return (BluetoothSocket) m.invoke(device, Constants.MY_UUID);
-            } catch (Exception e) {
-                Log.e(Constants.TAG, "Could not create Insecure RFComm Connection", e);
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= 10) {
+//            try {
+//                final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", new Class[]{UUID.class});
+//                return (BluetoothSocket) m.invoke(device, Constants.MY_UUID);
+//            } catch (Exception e) {
+//                Log.e(Constants.TAG, "Could not create Insecure RFComm Connection", e);
+//            }
+//        }
         return device.createRfcommSocketToServiceRecord(Constants.MY_UUID);
     }
 
@@ -289,6 +289,13 @@ public class BlueTooth extends IntentService {
 
             if (bufferedReader != null) {
                 // Keep listening to the InputStream until an exception occurs
+                Write("[?]");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+                Write("[!]");
                 while (isRunning) {
                     try {
                         // Read from the InputStream

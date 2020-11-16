@@ -1,58 +1,38 @@
-#pragma once
-
-#include <ArduinoJson.h>
 #include <ThreadController.h>
 #include <Thread.h>
-#include "Configuration.h"
-#include "Enumerations.h"
-#include "IOT.h"
-
-extern BatteryTester::Configuration _config;
-extern BatteryTester::IOT _iot;
-
-// const char c_Track[] = "Track";
-// const char c_Cycle[] = "Cycle";
-// const char c_Stop[] = "Stop";
-// const char c_Park[] = "Park";
-// const char c_Protect[] = "Protect";
-// const char c_GetConfiguration[] = "GetConfiguration";
-// const char c_GetDateTime[] = "GetDateTime";
-// const char c_BroadcastPosition[] = "BroadcastPosition";
-// const char c_StopBroadcast[] = "StopBroadcast";
-// const char c_SetC[] = "SetC";
-// const char c_SetL[] = "SetL";
-// const char c_SetA[] = "SetA";
-// const char c_SetO[] = "SetO";
-// const char c_SetDateTime[] = "SetDateTime";
-// const char c_MoveTo[] = "MoveTo";
-// const char c_East[] = "East";
-// const char c_West[] = "West";
-// const char c_Up[] = "Up";
-// const char c_Down[] = "Down";
+#include "Constants.h"
 
 namespace BatteryTester
 {
-	class Battery : public Thread
-	{
-	public:
-		Battery();
-		~Battery();
+    class Battery : public Thread
+    {
+    public:
+        Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t thermistorPin);
+        ~Battery();
+        void run();
+        void Reset();
+        void Calibrate();
 
-		TesterError _errorState;
-		void Initialize(ThreadController* controller);
-		// void Track();
-		// void Resume();
-		// void Park(bool protect);
-		TesterState getState();
-		void setState(TesterState state);
-		void ProcessCommand(const char* input);
+        uint16_t Voltage();
+        int16_t ChargeCurrent();
+        uint32_t DischargeCurrent();
+        uint16_t Temperature();
 
-	private:
+    private:
+        float Scale(uint32_t v);
+        uint8_t _highBatPin;
+        uint8_t _shuntPin;
+        uint8_t _tp4056Prog;
+        uint8_t _thermistorPin;
+        uint32_t _AcsOffset; // ACS712 vout when no current
+        uint32_t _movingAverageChargeCurrent;
+        uint32_t _movingAverageSumChargeCurrent;
+        uint32_t _movingAverageTemperature;
+        uint32_t _movingAverageSumTemperature;
+        uint32_t _movingAverageBatteryVolt;
+        uint32_t _movingAverageSumBatteryVolt;
+        uint32_t _movingAverageShuntVolt;
+        uint32_t _movingAverageSumShuntVolt;
+    };
 
-
-		void run();
-		TesterState _testerState;
-
-	};
-
-}
+} // namespace BatteryTester

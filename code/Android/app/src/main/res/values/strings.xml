@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">Battery</string>
-    <string name="One">Cell 1</string>
-    <string name="Two">Cell 2</string>
-    <string name="Three">Cell 3</string>
-    <string name="Four">Cell 4</string>
-</resources>

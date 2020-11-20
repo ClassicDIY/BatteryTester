@@ -28,7 +28,7 @@ namespace BatteryTester
 
 	void Configuration::setThermalShutdownTemperature(uint16_t val)
 	{
-		if (val < 700)
+		if (val < 800)
 		{
 			_thermalShutdownTemperature = val;
 			_isDirty = true;

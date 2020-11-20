@@ -3,17 +3,22 @@
 
 namespace BatteryTester
 {
-
-	Battery::Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t thermistorPin)
+	Battery::Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress)
 	{
 		_highBatPin = highBatPin;
 		_shuntPin = shuntPin;
 		_tp4056Prog = tp4056Prog;
-		_thermistorPin = thermistorPin;
+		_i2cAddress = i2cAddress;
 		pinMode(_tp4056Prog, INPUT);
 		pinMode(_highBatPin, INPUT);
 		pinMode(_shuntPin, INPUT);
-		pinMode(_thermistorPin, INPUT);
+		if (!tempsensor.begin(i2cAddress)) {
+    		logw("Couldn't find MCP9808! Check your connections and verify the address is correct.");
+		}
+		else
+		{
+			tempsensor.setResolution(MCP9808Resolution);  // 0.0625°C 250 ms
+		}
 		Reset();
 	}
 
@@ -25,19 +30,17 @@ namespace BatteryTester
 	{
 		_movingAverageChargeCurrent = 0;
 		_movingAverageSumChargeCurrent = 0;
-		_movingAverageTemperature = 0;
-		_movingAverageSumTemperature = 0;
 		_movingAverageBatteryVolt = 0;
 		_movingAverageSumBatteryVolt = 0;
 		_movingAverageShuntVolt = 0;
-        _movingAverageSumShuntVolt = 0;
+		_movingAverageSumShuntVolt = 0;
 	}
 
 	void Battery::Calibrate()
 	{
-		int count = AverageCount*5;
-		while (--count != 0) //Get 5 * AverageCount 
-		{													 
+		int count = AverageCount * 5;
+		while (--count != 0) //Get 5 * AverageCount
+		{
 			run();
 			delay(3); // let ADC settle before next sample 3ms
 		}
@@ -56,74 +59,62 @@ namespace BatteryTester
 		return sensorReading;
 	}
 
-		// in mV
+	// in mV
 	uint16_t Battery::Voltage()
 	{
 		float f = Scale(_movingAverageBatteryVolt) * 25000 / 15; // 10k and 15k divider * 1000 mV
-		return f + 0.5;										// round float by adding 0.5 before cast
+		return f + 0.5;											 // round float by adding 0.5 before cast
+	}
+
+	uint16_t Battery::ShuntVoltage()
+	{
+		float f = Scale(_movingAverageShuntVolt) * 25000 / 15; // 10k and 15k divider * 1000 mV
+		return f + 0.5;										   // round float by adding 0.5 before cast
 	}
 
 	// TP4056 Prog pin (in mA)
 	int16_t Battery::ChargeCurrent()
 	{
 		float f = Scale(_movingAverageChargeCurrent) * 1000; //mA
-		return f + 0.5; // round float by adding 0.5 before cast
+		return f + 0.5;										 // round float by adding 0.5 before cast
 	}
 
-	// Shunt voltage / 1Ω (in mA)
+	// Shunt voltage delta / 1Ω (in mA)
 	uint32_t Battery::DischargeCurrent()
 	{
-		_movingAverageBatteryVolt = 0;
-		_movingAverageSumBatteryVolt = 0;
-		_movingAverageShuntVolt = 0;
-		_movingAverageSumShuntVolt = 0;
-		unsigned long timeStamp = millis();
-		int i = 0;
-		while (millis() - timeStamp < 200)
-		{
-			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt - _movingAverageBatteryVolt;
-			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + analogRead(_highBatPin);
-			_movingAverageBatteryVolt = _movingAverageSumBatteryVolt / AverageCount;
-			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt - _movingAverageShuntVolt;
-			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + analogRead(_shuntPin);
-			_movingAverageShuntVolt = _movingAverageSumShuntVolt / AverageCount;
-			i++;
-		}
-		return _movingAverageBatteryVolt - _movingAverageShuntVolt;
+		return Voltage() - ShuntVoltage();
 	}
 
 	// °C * 10
 	uint16_t Battery::Temperature()
 	{
-		float vsens = Scale(_movingAverageTemperature) * 1000; // vsens in mV
-		float rtherm = RSeries * vsens / (ESPVoltageRef - vsens);
-		float steinhart;
-		steinhart = rtherm / THERMISTORNOMINAL;			  // (R/Ro)
-		steinhart = log(steinhart);						  // ln(R/Ro)
-		steinhart /= BCOEFFICIENT;						  // 1/B * ln(R/Ro)
-		steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
-		steinhart = 1.0 / steinhart;					  // Invert
-		steinhart -= 273.15;
-		return steinhart * 10; // °C X 10 as uint16
+		tempsensor.wake(); 
+		float c = tempsensor.readTempC();
+		return c * 10; // °C X 10 as uint16
 	}
 
 	void Battery::run()
 	{
-		_movingAverageSumTemperature = _movingAverageSumTemperature - _movingAverageTemperature;  // Remove previous sample from the sum
-		_movingAverageSumTemperature = _movingAverageSumTemperature + analogRead(_thermistorPin); // Replace it with the current sample
-		_movingAverageTemperature = _movingAverageSumTemperature / AverageCount;				  // Recalculate moving average
-		// charge current
-		_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent - _movingAverageChargeCurrent;
-		_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent + analogRead(_tp4056Prog);
-		_movingAverageChargeCurrent = _movingAverageSumChargeCurrent / AverageCount;
-		//Battery volts
-		_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt - _movingAverageBatteryVolt;
-		_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + analogRead(_highBatPin);
-		_movingAverageBatteryVolt = _movingAverageSumBatteryVolt / AverageCount;
-		// //Shunt volts
-		_movingAverageSumShuntVolt = _movingAverageSumShuntVolt - _movingAverageShuntVolt;
-		_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + analogRead(_shuntPin);
-		_movingAverageShuntVolt = _movingAverageSumShuntVolt / AverageCount;
+		runned();
+		unsigned long timeStamp = millis();
+		int i = 0;
+		while (millis() - timeStamp < MMASamplePeriod)
+		{
+			// charge current
+			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent - _movingAverageChargeCurrent; // Remove previous sample from the sum
+			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent + analogRead(_tp4056Prog);	   // Replace it with the current sample
+			_movingAverageChargeCurrent = _movingAverageSumChargeCurrent / AverageCount;				   // Recalculate moving average
+			//Battery volts
+			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt - _movingAverageBatteryVolt;
+			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + analogRead(_highBatPin);
+			_movingAverageBatteryVolt = _movingAverageSumBatteryVolt / AverageCount;
+			// //Shunt volts
+			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt - _movingAverageShuntVolt;
+			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + analogRead(_shuntPin);
+			_movingAverageShuntVolt = _movingAverageSumShuntVolt / AverageCount;
+			i++;
+		}
+		// logd("%d samples", i);
 	}
 
 } // namespace BatteryTester

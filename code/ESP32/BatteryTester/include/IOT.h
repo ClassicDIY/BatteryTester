@@ -11,13 +11,15 @@ extern "C"
 #include "IotWebConf.h"
 #include "Configuration.h"
 
-#define STR_LEN 64                            // general string buffer size
-#define CONFIG_LEN 32                         // configuration string buffer size
+#define STR_LEN 64    // general string buffer size
+#define CONFIG_LEN 32 // configuration string buffer size
 
 extern BatteryTester::Configuration _config;
 
 namespace BatteryTester
 {
+
+    typedef void (*IOTEventCb)();
     class IOT
     {
     public:

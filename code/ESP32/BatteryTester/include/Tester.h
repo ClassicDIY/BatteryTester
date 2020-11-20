@@ -18,7 +18,7 @@ namespace BatteryTester
 	{
 	public:
 		Tester(uint8_t batteryPosition, uint8_t highBatPin, uint8_t shuntPin, uint8_t gatePin, uint8_t tp4056Prog,
-				uint8_t tp4056Enable, uint8_t thermistorPin, uint8_t lowLoad, uint8_t tp4056Standby, uint8_t chargeCurrent4k, uint8_t chargeCurrent2k, uint8_t dischargeLed);
+			   uint8_t tp4056Enable, uint8_t i2cAddress, uint8_t lowLoad, uint8_t tp4056Standby, uint8_t chargeCurrent4k, uint8_t chargeCurrent2k, uint8_t dischargeLed);
 		~Tester();
 
 		TesterError _errorState;
@@ -28,9 +28,9 @@ namespace BatteryTester
 		// void Park(bool protect);
 		TesterState getState();
 		void setState(TesterState state);
-		void Enable();
 		void run();
 		void SetChargeCurrent();
+		Battery *pBattery() { return _pBattery; }
 
 	private:
 		uint8_t _batteryPosition; // 1 or 2;
@@ -49,7 +49,7 @@ namespace BatteryTester
 		unsigned long _previousPoll = 0;
 		uint32_t _internalResistance;
 
-		Battery* _pBattery;
+		Battery *_pBattery;
 		TesterState _state;
 
 		uint32_t DischargeTime();
@@ -64,7 +64,6 @@ namespace BatteryTester
 		void DischargeLed_Off();
 		void DischargeLed_On();
 		TesterState NextState();
-
 	};
 
 } // namespace BatteryTester

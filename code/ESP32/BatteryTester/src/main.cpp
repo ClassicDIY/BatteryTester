@@ -23,8 +23,8 @@ time_t _lastWindEvent;
 hw_timer_t *timer = NULL;
 Configuration _config = Configuration();
 ThreadController _controller = ThreadController();
-Tester _tester1 = Tester(0, HighBat1, Shunt1, DischargeGate1, Prog1, CE1, Temp1, LowLoad1, STBY1, ChargeCurrent4k1, ChargeCurrent2k1, DischargeLed1);
-Tester _tester2 = Tester(1, HighBat2, Shunt2, DischargeGate2, Prog2, CE2, Temp2, LowLoad2, STBY2, ChargeCurrent4k2, ChargeCurrent2k2, DischargeLed2);
+Tester _tester1 = Tester(0, HighBat1, Shunt1, DischargeGate1, Prog1, CE1, MCP9808_1, LowLoad1, STBY1, ChargeCurrent4k1, ChargeCurrent2k1, DischargeLed1);
+Tester _tester2 = Tester(1, HighBat2, Shunt2, DischargeGate2, Prog2, CE2, MCP9808_2, LowLoad2, STBY2, ChargeCurrent4k2, ChargeCurrent2k2, DischargeLed2);
 Thread *_workerThread = new Thread();
 IOT _iot = IOT();
 
@@ -66,7 +66,7 @@ void setup()
 	_config.Load();
 	// Configure main worker thread
 	_workerThread->onRun(feed_watchdog);
-	_workerThread->setInterval(2000);
+	_workerThread->setInterval(5000);
 	_controller.add(_workerThread);
 	logi("Initializing battery");
 	_tester1.Setup(&_controller);

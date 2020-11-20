@@ -41,8 +41,8 @@ namespace BatteryTester
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribe, QoS 1, packetId: %d", packetIdSub);
 		_mqttClient.publish(_willTopic, 0, false, "Online");
-		_tester1.Enable();
-		_tester2.Enable();
+		_tester1.setState(Initialize);
+		_tester2.setState(Initialize);
 	}
 
 	void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
@@ -81,6 +81,9 @@ namespace BatteryTester
 			logw("WiFi lost connection");
 			xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
 			break;
+		case SYSTEM_EVENT_STA_STOP:
+			logw("WiFi stopped");
+			break;
 		default:
 			break;
 		}
@@ -99,7 +102,7 @@ namespace BatteryTester
 		if (l < strlen(topic) && len < MaxMQTTPayload)
 		{
 			char *subtopic = &topic[l];
-			char buf[MaxMQTTTopic+1];
+			char buf[MaxMQTTTopic + 1];
 			strncpy(buf, payload, len);
 			buf[len] = 0;
 			logd("Payload: %s", buf);
@@ -108,7 +111,7 @@ namespace BatteryTester
 				if (strncmp(payload, "Monitor", len) == 0)
 				{
 					_tester1.setState(Monitor);
-					_tester2.setState(Monitor);
+					// _tester2.setState(Monitor);
 				}
 				if (strncmp(payload, "InternalResistance", len) == 0)
 				{
@@ -123,12 +126,17 @@ namespace BatteryTester
 				if (strncmp(payload, "Discharge", len) == 0)
 				{
 					_tester1.setState(Discharge);
-					_tester2.setState(Discharge);
+					// _tester2.setState(Discharge);
 				}
 				if (strncmp(payload, "Storage", len) == 0)
 				{
 					_tester1.setState(Storage);
 					_tester2.setState(Storage);
+				}
+				if (strncmp(payload, "Standby", len) == 0)
+				{
+					_tester1.setState(Standby);
+					_tester2.setState(Standby);
 				}
 			}
 			else if (strcmp(subtopic, "Config") == 0)
@@ -354,5 +362,6 @@ namespace BatteryTester
 			_mqttClient.publish(buf, 0, retained, value);
 		}
 	}
+
 
 } // namespace BatteryTester

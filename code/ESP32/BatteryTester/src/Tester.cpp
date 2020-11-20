@@ -6,7 +6,7 @@ namespace BatteryTester
 {
 
 	Tester::Tester(uint8_t batteryPosition, uint8_t highBatPin, uint8_t shuntPin, uint8_t gatePin, uint8_t tp4056Prog,
-				   uint8_t tp4056Enable, uint8_t thermistorPin, uint8_t load10mw, uint8_t tp4056Standby, uint8_t chargeCurrent4k, uint8_t chargeCurrent2k, uint8_t dischargeLed)
+				   uint8_t tp4056Enable, uint8_t i2cAddress, uint8_t load10mw, uint8_t tp4056Standby, uint8_t chargeCurrent4k, uint8_t chargeCurrent2k, uint8_t dischargeLed)
 	{
 		_batteryPosition = batteryPosition;
 		_tp4056Enable = tp4056Enable;
@@ -15,7 +15,7 @@ namespace BatteryTester
 		_chargeCurrent4k = chargeCurrent4k;
 		_chargeCurrent2k = chargeCurrent2k;
 		_dischargeLed = dischargeLed;
-		_pBattery = new Battery(highBatPin, shuntPin, tp4056Prog, thermistorPin);
+		_pBattery = new Battery(highBatPin, shuntPin, tp4056Prog, i2cAddress);
 		pinMode(_tp4056Enable, OUTPUT);
 		pinMode(_chargeCurrent4k, OUTPUT);
 		pinMode(_chargeCurrent2k, OUTPUT);
@@ -37,17 +37,12 @@ namespace BatteryTester
 	void Tester::Setup(ThreadController *controller)
 	{
 		enabled = false;
-		setInterval(2000);
+		setInterval(2500);
 		setState(Initialize);
 		controller->add(this);
 		_pBattery->setInterval(MMASampleRate);
 		controller->add(_pBattery);
 		SetChargeCurrent();
-	}
-
-	void Tester::Enable()
-	{
-		setState(Initialize);
 	}
 
 	TesterState Tester::getState()
@@ -57,7 +52,7 @@ namespace BatteryTester
 
 	TesterState Tester::NextState()
 	{
-		logd("NextState");
+		logd("ToDo NextState");
 		return Monitor;
 	}
 
@@ -93,15 +88,18 @@ namespace BatteryTester
 				mode = "InternalResistance";
 				break;
 			case Charge:
+				_MaxTemperature = 0;
 				Load_Off();
 				LowLoad_Off();
 				TP4056_On();
 				DischargeLed_Off();
 				SetChargeCurrent();
+				_totalMillis = millis();
 				enabled = true;
 				mode = "Charge";
 				break;
 			case Discharge:
+				_MaxTemperature = 0;
 				_dutyCycle = 128;
 				_previousMillis = millis();
 				_totalMillis = millis();
@@ -113,6 +111,7 @@ namespace BatteryTester
 				mode = "Discharge";
 				break;
 			case Storage:
+				_MaxTemperature = 0;
 				Load_Off();
 				LowLoad_Off();
 				TP4056_On();
@@ -137,6 +136,7 @@ namespace BatteryTester
 				mode = "Complete";
 				break;
 			case Monitor:
+				_MaxTemperature = 0;
 				Load_Off();
 				LowLoad_Off();
 				TP4056_Off();
@@ -190,7 +190,7 @@ namespace BatteryTester
 		case Monitor:
 		{
 			float temp = _pBattery->Temperature();
-			logi("Monitor: Battery(%d) %d mV %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ChargeCurrent(), temp / 10);
+			logi("Monitor: Battery(%d) %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
 		}
 		break;
 		case Charge:
@@ -199,6 +199,14 @@ namespace BatteryTester
 			logi("InitialCharge: Battery(%d) %d mV %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ChargeCurrent(), temp / 10);
 			if (TP4056_OnStandby())
 			{
+				_totalMillis = millis() - _totalMillis;
+				StaticJsonDocument<1024> doc;
+				doc["mode"] = "Charge";
+				doc["charge_time"] = _totalMillis / 1000;
+				doc["state"] = "complete";
+				String s;
+				serializeJson(doc, s);
+				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 				setState(NextState());
 			}
 		}
@@ -225,13 +233,14 @@ namespace BatteryTester
 			_internalResistance /= (iMax - iMin);
 			logd("voc %d, vLoad %d, iMin %d, iMax %d", voc, vLoad, iMin, iMax);
 			logi("InternalResistance Battery(%d), %d", _batteryPosition, _internalResistance);
-			if (_internalResistance < 1000)
-			{
-				setState(NextState());
-				_previousMillis = millis();
-				_totalMillis = millis();
-				_mAs = 0;
-			}
+			StaticJsonDocument<1024> doc;
+			doc["mode"] = "InternalResistance";
+			doc["reading"] = _internalResistance;
+			String s;
+			serializeJson(doc, s);
+			_iot.publish(_batteryPosition, "result", s.c_str(), false);
+
+			setState(NextState());
 		}
 		break;
 		case Discharge:
@@ -244,20 +253,33 @@ namespace BatteryTester
 				_previousMillis = millis();
 				if (current > 550 && _dutyCycle > 0)
 				{
-					--_dutyCycle;
+					// --_dutyCycle;
+					_dutyCycle -= 10;
+					Load_On();
 				}
 				else if (current < 450 && _dutyCycle < 255)
 				{
-					_dutyCycle++;
+					// _dutyCycle++;
+					_dutyCycle += 10;
+					Load_On();
 				}
 				float temp = _pBattery->Temperature();
-				logi("Discharge: Battery(%d) %d mV %d mA %2.1f °C dutyCycle %2.0f %%", _batteryPosition, _pBattery->Voltage(), current, temp / 10, _dutyCycle / 2.55);
+				logi("Discharge: Battery(%d) %d mV %d mV %d mA %2.1f °C dutyCycle %2.0f %%", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), current, temp / 10, _dutyCycle / 2.55);
 			}
 			else
 			{
+
 				Load_Off();
 				DischargeLed_Off();
 				_totalMillis = millis() - _totalMillis;
+				StaticJsonDocument<1024> doc;
+				doc["mode"] = "Discharge";
+				doc["Discharge_Time"] = _totalMillis / 1000;
+				doc["Capacity"] = _mAs / 3600;
+				String s;
+				serializeJson(doc, s);
+				_iot.publish(_batteryPosition, "result", s.c_str(), false);
+				logi("Discharge done! duration %d capacity %d", _totalMillis, _mAs / 3600);
 				setState(NextState());
 			}
 		}
@@ -266,19 +288,27 @@ namespace BatteryTester
 		{
 			if (_pBattery->Voltage() >= _config.getStorageVoltage())
 			{
+				StaticJsonDocument<1024> doc;
+				doc["mode"] = "Storage";
+				doc["state"] = "complete";
+				String s;
+				serializeJson(doc, s);
+				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 				setState(NextState());
 			}
 		}
 		break;
 		}
-		uint32_t temp = _pBattery->Temperature();
+		uint16_t temp = _pBattery->Temperature();
 		if (temp > _MaxTemperature)
 		{
 			_MaxTemperature = temp;
-			if (temp >= _config.getThermalShutdownTemperature())
-			{
-				setState(ThermalShutdown);
-			}
+			logd("_MaxTemperature %d", _MaxTemperature);
+		}
+		if (temp >= _config.getThermalShutdownTemperature())
+		{
+			logd("ThermalShutdown");
+			setState(ThermalShutdown);
 		}
 	}
 
@@ -350,4 +380,5 @@ namespace BatteryTester
 		digitalWrite(_chargeCurrent4k, (cc & 0x01) ? LOW : HIGH);
 		digitalWrite(_chargeCurrent2k, (cc & 0x02) ? LOW : HIGH);
 	}
+
 } // namespace BatteryTester

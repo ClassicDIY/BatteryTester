@@ -10,6 +10,7 @@ extern BatteryTester::Tester _tester2;
 
 namespace BatteryTester
 {
+	StaticJsonDocument<MaxMQTTPayload> _JSdoc;
 	AsyncMqttClient _mqttClient;
 	TimerHandle_t mqttReconnectTimer;
 	DNSServer _dnsServer;
@@ -67,14 +68,13 @@ namespace BatteryTester
 	{
 		logd("[WiFi-event] event: %d", event);
 		String s;
-		StaticJsonDocument<128> doc;
 		switch (event)
 		{
 		case SYSTEM_EVENT_STA_GOT_IP:
 			logd("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
-			doc["IP"] = WiFi.localIP().toString().c_str();
-			doc["ApPassword"] = TAG;
-			serializeJson(doc, s);
+			_JSdoc["IP"] = WiFi.localIP().toString().c_str();
+			_JSdoc["ApPassword"] = TAG;
+			serializeJson(_JSdoc, s);
 			s += '\n';
 			Serial.printf(s.c_str()); // send json to flash tool
 			configTime(0, 0, ntpServer);
@@ -117,35 +117,44 @@ namespace BatteryTester
 					_tester1.setState(Monitor);
 					_tester2.setState(Monitor);
 				}
-				if (strncmp(payload, "Standby", len) == 0)
+				else if (strncmp(payload, "Standby", len) == 0)
 				{
 					_tester1.setState(Standby);
 					_tester2.setState(Standby);
 				}
-				if (strncmp(payload, "InternalResistance", len) == 0)
+				else
 				{
-					_tester1.MeasureInternalResistance();
-					_tester2.MeasureInternalResistance();
-				}
-				if (strncmp(payload, "Charge", len) == 0)
-				{
-					_tester1.Charge();
-					_tester2.Charge();
-				}
-				if (strncmp(payload, "Cycle", len) == 0)
-				{
-					_tester1.Cycle();
-					_tester2.Cycle();
-				}
-				if (strncmp(payload, "Discharge", len) == 0)
-				{
-					_tester1.DoDischarge();
-					_tester2.DoDischarge();
-				}
-				if (strncmp(payload, "Storage", len) == 0)
-				{
-					_tester1.Storage();
-					_tester2.Storage();
+					Operation op = NoOp;
+					if (strncmp(payload, "Cycle", len) == 0)
+					{
+						op = TestCycleOperation;
+					}
+					else if (strncmp(payload, "Charge", len) == 0)
+					{
+						op = ChargeOperation;
+					}
+					else if (strncmp(payload, "TestAndStore", len) == 0)
+					{
+						op = TestAndStoreOperation;
+					}
+					else if (strncmp(payload, "TestAndCharge", len) == 0)
+					{
+						op = TestAndChargeOperation;
+					}
+					else if (strncmp(payload, "Storage", len) == 0)
+					{
+						op = StorageOperation;
+					}
+					else if (strncmp(payload, "InternalResistance", len) == 0)
+					{
+						op = InternalResistanceOperation;
+					}
+					else if (strncmp(payload, "Discharge", len) == 0)
+					{
+						op = DischargeOperation;
+					}
+					_tester1.Perform(op);
+					_tester2.Perform(op);
 				}
 			}
 			else if (strcmp(subtopic, "Config") == 0)
@@ -156,29 +165,38 @@ namespace BatteryTester
 				}
 				else // set configuration
 				{
-					StaticJsonDocument<MaxMQTTPayload> doc;
-					DeserializationError error = deserializeJson(doc, payload, len);
+					DeserializationError error = deserializeJson(_JSdoc, payload, len);
 					if (!error)
 					{
-						if (doc.containsKey("LowCutoff"))
+						if (_JSdoc.containsKey("LowCutoff"))
 						{
-							uint16_t val = doc["LowCutoff"];
+							uint16_t val = _JSdoc["LowCutoff"];
 							_config.setLowCutoff(val);
 						}
-						if (doc.containsKey("ThermalShutdownTemperature"))
+						if (_JSdoc.containsKey("ThermalShutdownTemperature"))
 						{
-							uint16_t val = doc["ThermalShutdownTemperature"];
+							uint16_t val = _JSdoc["ThermalShutdownTemperature"];
 							_config.setThermalShutdownTemperature(val);
 						}
-						if (doc.containsKey("StorageVoltage"))
+						if (_JSdoc.containsKey("StorageVoltage"))
 						{
-							uint16_t val = doc["StorageVoltage"];
+							uint16_t val = _JSdoc["StorageVoltage"];
 							_config.setStorageVoltage(val);
 						}
-						if (doc.containsKey("ChargeCurrent"))
+						if (_JSdoc.containsKey("StabilizeDuration"))
 						{
-							uint8_t val = doc["ChargeCurrent"];
+							uint16_t val = _JSdoc["stabilizeDuration"];
+							_config.setStabilizeDuration(val);
+						}
+						if (_JSdoc.containsKey("ChargeCurrent"))
+						{
+							uint8_t val = _JSdoc["ChargeCurrent"];
 							_config.setChargeCurrent(val);
+						}
+						if (_JSdoc.containsKey("ChargeDischargeCycleCount"))
+						{
+							uint8_t val = _JSdoc["ChargeDischargeCycleCount"];
+							_config.setChargeDischargeCycleCount(val);
 						}
 					}
 					else
@@ -243,9 +261,9 @@ namespace BatteryTester
 		_iotWebConf.setConfigPin(WIFI_AP_PIN);
 		if (FACTORY_RESET_PIN != -1)
 		{
+			pinMode(FACTORY_RESET_PIN, INPUT_PULLUP);
 			if (digitalRead(FACTORY_RESET_PIN) == LOW)
 			{
-				pinMode(FACTORY_RESET_PIN, INPUT_PULLUP);
 				EEPROM.begin(IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH);
 				for (byte t = 0; t < IOTWEBCONF_CONFIG_VERSION_LENGTH; t++)
 				{
@@ -338,17 +356,16 @@ namespace BatteryTester
 			{
 				String s = Serial.readStringUntil('}');
 				s += "}";
-				StaticJsonDocument<128> doc;
-				DeserializationError err = deserializeJson(doc, s);
+				DeserializationError err = deserializeJson(_JSdoc, s);
 				if (err)
 				{
 					loge("deserializeJson() failed: %s", err.c_str());
 				}
 				else
 				{
-					if (doc.containsKey("ssid") && doc.containsKey("password"))
+					if (_JSdoc.containsKey("ssid") && _JSdoc.containsKey("password"))
 					{
-						SetupWifi(doc["ssid"], doc["password"]);
+						SetupWifi(_JSdoc["ssid"], _JSdoc["password"]);
 					}
 					else
 					{

@@ -61,14 +61,14 @@ void setup()
 	{
 		; // wait for serial port to connect.
 	}
-	logi("Loading configuration");
+	logd("Loading configuration");
 	_iot.Init();
 	_config.Load();
 	// Configure main worker thread
 	_workerThread->onRun(feed_watchdog);
 	_workerThread->setInterval(2000);
 	_controller.add(_workerThread);
-	logi("Initializing battery");
+	logd("Initializing battery");
 	_tester1.Setup(&_controller);
 	_tester2.Setup(&_controller);
 	init_watchdog();
@@ -78,7 +78,7 @@ void loop()
 {
 	if (_config.isDirty())
 	{
-		logi("dirty!!!");
+		logd("dirty!!!");
 		_config.Save();
 		_config.PrintConfiguration();
 	}

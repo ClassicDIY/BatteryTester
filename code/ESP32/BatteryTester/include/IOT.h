@@ -10,6 +10,7 @@ extern "C"
 #include "AsyncMqttClient.h"
 #include "IotWebConf.h"
 #include "Configuration.h"
+#include "Constants.h"
 
 #define STR_LEN 64    // general string buffer size
 

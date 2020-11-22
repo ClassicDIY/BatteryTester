@@ -17,42 +17,6 @@ namespace BatteryTester
 	{
 	}
 
-	void Configuration::setLowCutoff(uint16_t val)
-	{
-		if (val > 2000)
-		{
-			_lowCutoff = val;
-			_isDirty = true;
-		}
-	}
-
-	void Configuration::setThermalShutdownTemperature(uint16_t val)
-	{
-		if (val < 800)
-		{
-			_thermalShutdownTemperature = val;
-			_isDirty = true;
-		}
-	}
-
-	void Configuration::setStorageVoltage(uint16_t val)
-	{
-		if (val < 4200)
-		{
-			_storageVoltage = val;
-			_isDirty = true;
-		}
-	}
-
-	void Configuration::setChargeCurrent(uint8_t val)
-	{
-		if (val < 4)
-		{
-			_chargeCurrent = val;
-			_isDirty = true;
-		}
-	}
-
 	float deserialFloat(byte *buffer)
 	{
 		float f = 0;
@@ -80,12 +44,11 @@ namespace BatteryTester
 
 	void Configuration::Load()
 	{
-
 		if (_preferences.begin(TAG, false))
 		{
 			if (digitalRead(FACTORY_RESET_PIN) == LOW)
 			{
-				logi("FACTORY_RESET_PIN LOW, loading default settings");
+				logw("FACTORY_RESET_PIN LOW, loading default settings");
 				LoadFactoryDefault();
 				_preferences.clear();
 				Save();
@@ -94,7 +57,7 @@ namespace BatteryTester
 			_preferences.getBytes("Configuration", _buffer, STORAGE_SIZE);
 			if (CalcChecksum(_buffer) == 0)
 			{
-				logi("Checksum passed, loading saved settings");
+				logd("Checksum passed, loading saved settings");
 				_lowCutoff = deserialWord(&(_buffer[0]));
 				_thermalShutdownTemperature = deserialWord(&(_buffer[2]));
 				_storageVoltage = deserialWord(&(_buffer[4]));
@@ -106,13 +69,13 @@ namespace BatteryTester
 			}
 			else
 			{
-				logi("Checksum failed, loading default settings");
+				logw("Checksum failed, loading default settings");
 				LoadFactoryDefault();
 			}
 		}
 		else
 		{
-			logi("Could not initialize preferences, loading default settings");
+			logw("Could not initialize preferences, loading default settings");
 			LoadFactoryDefault();
 		}
 		PrintConfiguration();
@@ -120,7 +83,6 @@ namespace BatteryTester
 
 	void Configuration::LoadFactoryDefault()
 	{
-		logi("loading factory default settings");
 		_thermalShutdownTemperature = ThermalShutdownTemperature;
 		_lowCutoff = LowCutoff;
 		_storageVoltage = StorageVoltage;
@@ -168,7 +130,7 @@ namespace BatteryTester
 		buffer[STORAGE_SIZE] = CalcChecksum(buffer);
 		_preferences.putBytes("Configuration", buffer, STORAGE_SIZE);
 		_isDirty = false;
-		logi("Saved settings");
+		logd("Saved settings");
 	}
 
 	byte Configuration::CalcChecksum(byte _buffer[])
@@ -177,7 +139,7 @@ namespace BatteryTester
 		for (int i = 0; i < STORAGE_SIZE; i++)
 			crc += _buffer[i];
 		crc = -crc;
-		logi("Checksum cal: %x", crc);
+		logd("Checksum cal: %x", crc);
 		return crc;
 	}
 

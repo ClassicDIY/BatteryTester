@@ -13,7 +13,7 @@
 #define PWMfrequency 1000000 // discharger frequency
 #define PWMChannel 0
 #define PWMResolution 8 // duty cycle 0 -> 255
-#define MaxMQTTPayload 255
+#define MaxMQTTPayload 2048
 #define MaxMQTTTopic 255
 #define DefaultChargeCurrent 3 // charge current factory setting
 #define StabilizeDuration 30 // default amount of seconds to monitor during stabilize operation

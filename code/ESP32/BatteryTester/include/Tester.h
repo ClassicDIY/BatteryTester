@@ -23,11 +23,7 @@ namespace BatteryTester
 
 		TesterError _errorState;
 		void Setup(ThreadController *controller);
-		void Charge();
-		void Cycle();
-		void DoDischarge();
-		void Storage();
-		void MeasureInternalResistance();
+		void Perform(Operation op);
 		void setState(State state);
 		void run();
 		Battery *pBattery() { return _pBattery; }
@@ -36,6 +32,8 @@ namespace BatteryTester
 		void SetChargeCurrent();
         const char* StateText();
 		const char* StateText(State s);
+
+		StaticJsonDocument<MaxMQTTPayload> _doc;
 		uint8_t _batteryPosition; // 1 or 2;
 		uint8_t _tp4056Enable;
 		uint8_t _tp4056Standby;

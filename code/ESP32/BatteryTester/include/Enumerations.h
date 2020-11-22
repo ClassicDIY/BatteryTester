@@ -23,4 +23,16 @@ namespace BatteryTester
 		Tester_Ok,
 		Tester_MCP9808_Failed
 	};
+
+	enum Operation
+	{
+		NoOp,
+		TestCycleOperation,
+		ChargeOperation,
+		TestAndStoreOperation,
+		TestAndChargeOperation,
+		StorageOperation,
+		InternalResistanceOperation,
+		DischargeOperation
+	};
 }

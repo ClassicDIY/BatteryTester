@@ -7,6 +7,8 @@ namespace BatteryTester
 
 	State TestCycleSequence[7]{FullCharge, Stabilize, Discharge, Stabilize, FullCharge, Stabilize, CycleConplete};
 	State ChargeSequence[4]{FullCharge, Stabilize, InternalResistance, Standby};
+	State TestAndStoreSequence[7]{FullCharge, Stabilize, InternalResistance, Discharge, Stabilize, StorageCharge, Standby};
+	State TestAndChargeSequence[7]{FullCharge, Stabilize, InternalResistance, Discharge, Stabilize, FullCharge, Standby};
 	State StorageSequence[4]{Discharge, Stabilize, StorageCharge, Standby};
 	State InternalResistanceSequence[2]{InternalResistance, Standby};
 	State DischargeSequence[2]{Discharge, Standby};
@@ -48,38 +50,36 @@ namespace BatteryTester
 		SetChargeCurrent();
 	}
 
-	void Tester::Charge()
+	void Tester::Perform(Operation op)
 	{
-		_currentOperation = ChargeSequence;
-		_currentStage = 0;
-		setState(NextState());
-	}
-
-	void Tester::Storage()
-	{
-		_currentOperation = StorageSequence;
-		_currentStage = 0;
-		setState(NextState());
-	}
-
-	void Tester::Cycle()
-	{
-		_cycleCount = _config.getChargeDischargeCycleCount();
-		_currentOperation = TestCycleSequence;
-		_currentStage = 0;
-		setState(NextState());
-	}
-
-	void Tester::MeasureInternalResistance()
-	{
-		_currentOperation = InternalResistanceSequence;
-		_currentStage = 0;
-		setState(NextState());
-	}
-
-	void Tester::DoDischarge()
-	{
-		_currentOperation = DischargeSequence;
+		switch (op)
+		{
+		case TestCycleOperation:
+			_cycleCount = _config.getChargeDischargeCycleCount();
+			_currentOperation = TestCycleSequence;
+			break;
+		case ChargeOperation:
+			_currentOperation = ChargeSequence;
+			break;
+		case TestAndStoreOperation:
+			_currentOperation = TestAndStoreSequence;
+			break;
+		case TestAndChargeOperation:
+			_currentOperation = TestAndChargeSequence;
+			break;
+		case StorageOperation:
+			_currentOperation = StorageSequence;
+			break;
+		case InternalResistanceOperation:
+			_currentOperation = InternalResistanceSequence;
+			break;
+		case DischargeOperation:
+			_currentOperation = DischargeSequence;
+			break;
+		case NoOp:
+		default:
+			return;
+		}
 		_currentStage = 0;
 		setState(NextState());
 	}
@@ -254,13 +254,12 @@ namespace BatteryTester
 	void Tester::run()
 	{
 		runned();
-		// logd(" Battery(%d): Running state %s", _batteryPosition, StateText());
 		switch (_state)
 		{
 		case Monitor:
 		{
 			float temp = _pBattery->Temperature();
-			logi("Battery(%d) Monitor: %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
+			logd("Battery(%d) Monitor: %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
 		}
 		break;
 		case Standby:
@@ -278,24 +277,22 @@ namespace BatteryTester
 			{
 				BlinkLED();
 			}
-			
 		}
 		break;
 		case Stabilize:
 		{
 			if (millis() - _totalMillis > _config.getStabilizeDuration() * 1000)
 			{
-				StaticJsonDocument<1024> doc;
-				doc["mode"] = StateText();
-				doc["voltage"] = _pBattery->Voltage();
-				doc["maxTemperature"] = _MaxTemperature;
+				_doc["mode"] = StateText();
+				_doc["voltage"] = _pBattery->Voltage();
+				_doc["maxTemperature"] = _MaxTemperature;
 				String s;
-				serializeJson(doc, s);
+				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 				setState(NextState());
 			}
 			float temp = _pBattery->Temperature();
-			logi("Battery(%d): Stabilize  %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
+			logd("Battery(%d): Stabilize  %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
 		}
 		break;
 		case FullCharge:
@@ -304,7 +301,7 @@ namespace BatteryTester
 			_mAs += _pBattery->ChargeCurrent() * t / 1000;
 			_previousMillis = millis();
 			float temp = _pBattery->Temperature();
-			logi("Battery(%d): FullCharge  %d mV %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ChargeCurrent(), temp / 10);
+			logd("Battery(%d): FullCharge  %d mV %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ChargeCurrent(), temp / 10);
 			if (TP4056_OnStandby())
 			{
 				TP4056_Off();
@@ -312,13 +309,12 @@ namespace BatteryTester
 				if (_pBattery->CheckForBattery())
 				{
 					_totalMillis = millis() - _totalMillis;
-					StaticJsonDocument<1024> doc;
-					doc["mode"] = StateText();
-					doc["charge_time"] = _totalMillis / 1000;
-					doc["Energy"] = _mAs / 3600;
-					doc["maxTemperature"] = _MaxTemperature;
+					_doc["mode"] = StateText();
+					_doc["charge_time"] = _totalMillis / 1000;
+					_doc["Energy"] = _mAs / 3600;
+					_doc["maxTemperature"] = _MaxTemperature;
 					String s;
-					serializeJson(doc, s);
+					serializeJson(_doc, s);
 					_iot.publish(_batteryPosition, "result", s.c_str(), false);
 					setState(NextState());
 				}
@@ -355,14 +351,13 @@ namespace BatteryTester
 			else
 			{
 				_internalResistance /= (iMax);
-				logi("Battery(%d): InternalResistance  %d", _batteryPosition, _internalResistance);
+				logd("Battery(%d): InternalResistance  %d", _batteryPosition, _internalResistance);
 				logd("Battery(%d): voc %d, vLoad %d, iMax %d", _batteryPosition, voc, vLoad, iMax);
-				StaticJsonDocument<1024> doc;
-				doc["mode"] = StateText();
-				doc["reading"] = _internalResistance;
-				doc["maxTemperature"] = _MaxTemperature;
+				_doc["mode"] = StateText();
+				_doc["reading"] = _internalResistance;
+				_doc["maxTemperature"] = _MaxTemperature;
 				String s;
-				serializeJson(doc, s);
+				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 			}
 			setState(NextState());
@@ -389,7 +384,7 @@ namespace BatteryTester
 					Load_On();
 				}
 				float temp = _pBattery->Temperature();
-				logi("Discharge: Battery(%d) %d mV %d mV %d mA %2.1f °C dutyCycle %2.0f %%", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), current, temp / 10, _dutyCycle / 2.55);
+				logd("Discharge: Battery(%d) %d mV %d mV %d mA %2.1f °C dutyCycle %2.0f %%", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), current, temp / 10, _dutyCycle / 2.55);
 			}
 			else
 			{
@@ -399,15 +394,14 @@ namespace BatteryTester
 				if (_pBattery->CheckForBattery())
 				{
 					_totalMillis = millis() - _totalMillis;
-					StaticJsonDocument<1024> doc;
-					doc["mode"] = StateText();
-					doc["cischarge_Time"] = _totalMillis / 1000;
-					doc["capacity"] = _mAs / 3600;
-					doc["maxTemperature"] = _MaxTemperature;
+					_doc["mode"] = StateText();
+					_doc["cischarge_Time"] = _totalMillis / 1000;
+					_doc["capacity"] = _mAs / 3600;
+					_doc["maxTemperature"] = _MaxTemperature;
 					String s;
-					serializeJson(doc, s);
+					serializeJson(_doc, s);
 					_iot.publish(_batteryPosition, "result", s.c_str(), false);
-					logi(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, _totalMillis, _mAs / 3600);
+					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, _totalMillis, _mAs / 3600);
 					setState(NextState());
 				}
 			}
@@ -417,12 +411,11 @@ namespace BatteryTester
 		{
 			if (_pBattery->Voltage() >= _config.getStorageVoltage())
 			{
-				StaticJsonDocument<1024> doc;
-				doc["mode"] = StateText();
-				doc["voltage"] = _pBattery->Voltage();
-				doc["maxTemperature"] = _MaxTemperature;
+				_doc["mode"] = StateText();
+				_doc["voltage"] = _pBattery->Voltage();
+				_doc["maxTemperature"] = _MaxTemperature;
 				String s;
-				serializeJson(doc, s);
+				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 				setState(NextState());
 			}
@@ -433,13 +426,12 @@ namespace BatteryTester
 			_cycleCount--;
 			if (_cycleCount > 0)
 			{
-				StaticJsonDocument<1024> doc;
-				doc["mode"] = StateText();
-				doc["voltage"] = _pBattery->Voltage();
-				doc["cycle"] = _cycleCount;
-				doc["maxTemperature"] = _MaxTemperature;
+				_doc["mode"] = StateText();
+				_doc["voltage"] = _pBattery->Voltage();
+				_doc["cycle"] = _cycleCount;
+				_doc["maxTemperature"] = _MaxTemperature;
 				String s;
-				serializeJson(doc, s);
+				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 				_currentStage = 0; // start over
 				setState(NextState());
@@ -457,14 +449,13 @@ namespace BatteryTester
 			}
 			if (temp >= _config.getThermalShutdownTemperature())
 			{
-				logd("Battery(%d): ThermalShutdown at %d", _batteryPosition, temp);
+				logw("Battery(%d): ThermalShutdown at %d", _batteryPosition, temp);
 				setState(ThermalShutdown);
-				StaticJsonDocument<1024> doc;
-				doc["mode"] = StateText();
-				doc["voltage"] = _pBattery->Voltage();
-				doc["maxTemperature"] = _MaxTemperature;
+				_doc["mode"] = StateText();
+				_doc["voltage"] = _pBattery->Voltage();
+				_doc["maxTemperature"] = _MaxTemperature;
 				String s;
-				serializeJson(doc, s);
+				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 			}
 		}

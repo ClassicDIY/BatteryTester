@@ -4,6 +4,7 @@ namespace BatteryTester
 {
 	enum State
 	{
+		Unspecified,
 		Initialize, 
 		Standby, 
 		NoBatteryFound, 

@@ -42,11 +42,12 @@ namespace BatteryTester
 	void Tester::Setup(ThreadController *controller)
 	{
 		enabled = false;
-		setInterval(MonitorRate);
-		setState(Initialize);
+		_pBattery->enabled = false;
 		controller->add(this);
 		_pBattery->setInterval(MMASampleRate);
 		controller->add(_pBattery);
+		setInterval(MonitorRate);
+		setState(Initialize);
 		SetChargeCurrent();
 	}
 
@@ -125,6 +126,7 @@ namespace BatteryTester
 		case Stabilize:
 			return "Stabilize";
 		case Initialize:
+			return "Initialize";
 		default:
 			return "Unknown";
 		}
@@ -134,11 +136,13 @@ namespace BatteryTester
 	{
 		if (_state != state)
 		{
+			logd("Battery(%d): SetState %s", _batteryPosition, StateText(state));
 			_state = state;
 			switch (state)
 			{
 			case Standby:
 				enabled = true;
+				_pBattery->enabled = true;
 				_currentStage = 0;
 				TP4056_Off();
 				Load_Off();
@@ -146,6 +150,7 @@ namespace BatteryTester
 				break;
 			case NoBatteryFound:
 				enabled = true;
+				_pBattery->enabled = true;
 				_currentStage = 0;
 				TP4056_Off();
 				Load_Off();
@@ -155,7 +160,6 @@ namespace BatteryTester
 				TP4056_Off();
 				Load_Off();
 				DischargeLed_Off();
-				enabled = true;
 				break;
 			case FullCharge:
 				_mAs = 0;
@@ -166,7 +170,6 @@ namespace BatteryTester
 				DischargeLed_Off();
 				SetChargeCurrent();
 				_totalMillis = millis();
-				enabled = true;
 				break;
 			case Discharge:
 				_mAs = 0;
@@ -177,23 +180,19 @@ namespace BatteryTester
 				TP4056_Off();
 				Load_On();
 				DischargeLed_On();
-				enabled = true;
 				break;
 			case StorageCharge:
 				_MaxTemperature = 0;
 				Load_Off();
 				TP4056_On();
 				SetChargeCurrent();
-				enabled = true;
 				break;
 			case ThermalShutdown:
-				enabled = false;
 				TP4056_Off();
 				Load_Off();
 				DischargeLed_Off();
 				break;
 			case CycleConplete:
-				enabled = false;
 				TP4056_Off();
 				Load_Off();
 				DischargeLed_Off();
@@ -204,7 +203,6 @@ namespace BatteryTester
 				Load_Off();
 				TP4056_Off();
 				DischargeLed_Off();
-				enabled = true;
 				break;
 			case Stabilize:
 				_totalMillis = millis();
@@ -212,7 +210,6 @@ namespace BatteryTester
 				Load_Off();
 				TP4056_Off();
 				DischargeLed_Off();
-				enabled = true;
 				break;
 			case Initialize:
 			default:
@@ -231,6 +228,7 @@ namespace BatteryTester
 				_pBattery->Reset();
 				_pBattery->MMA();
 				enabled = false;
+				_pBattery->enabled = false;
 				break;
 			}
 			_iot.publish(_batteryPosition, "mode", StateText(), false);
@@ -257,6 +255,7 @@ namespace BatteryTester
 		switch (_state)
 		{
 		case Monitor:
+		case ThermalShutdown:
 		{
 			float temp = _pBattery->Temperature();
 			logd("Battery(%d) Monitor: %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
@@ -317,10 +316,6 @@ namespace BatteryTester
 					serializeJson(_doc, s);
 					_iot.publish(_batteryPosition, "result", s.c_str(), false);
 					setState(NextState());
-				}
-				else
-				{
-					setState(NoBatteryFound);
 				}
 			}
 		}
@@ -388,7 +383,6 @@ namespace BatteryTester
 			}
 			else
 			{
-
 				Load_Off();
 				DischargeLed_Off();
 				if (_pBattery->CheckForBattery())
@@ -440,6 +434,10 @@ namespace BatteryTester
 		}
 		break;
 		}
+		if (_pBattery->CheckForBattery() == false)
+		{
+			setState(NoBatteryFound);
+		}
 		uint16_t temp = _pBattery->Temperature();
 		if (temp < 1000) // skip bad MCP9808 readings?
 		{
@@ -458,10 +456,6 @@ namespace BatteryTester
 				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 			}
-		}
-		if (_pBattery->CheckForBattery() == false)
-		{
-			setState(NoBatteryFound);
 		}
 	}
 

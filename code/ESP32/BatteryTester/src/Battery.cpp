@@ -9,20 +9,16 @@ namespace BatteryTester
 		_shuntPin = shuntPin;
 		_tp4056Prog = tp4056Prog;
 		_lowLoad = lowLoad;
+		_i2cAddress = i2cAddress;
 		pinMode(_tp4056Prog, INPUT);
-		pinMode(_highBatPin, INPUT);
+		pinMode(_highBatPin, INPUT_PULLUP);
 		pinMode(_shuntPin, INPUT);
 		pinMode(_lowLoad, OUTPUT_OPEN_DRAIN);
 		LowLoad_Off();
-		if (!tempsensor.begin(i2cAddress))
+		if (!_tempsensor.begin(_i2cAddress))
 		{
-			logw("Couldn't find MCP9808! for address %x Check your connections and verify the address is correct.", i2cAddress);
+			logw("Couldn't find MCP9808! for address %x Check your connections and verify the address is correct.", _i2cAddress);
 		}
-		else
-		{
-			tempsensor.setResolution(MCP9808Resolution); // 0.0625°C 250 ms
-		}
-		Reset();
 	}
 
 	Battery::~Battery()
@@ -37,6 +33,8 @@ namespace BatteryTester
 		_movingAverageSumBatteryVolt = 0;
 		_movingAverageShuntVolt = 0;
 		_movingAverageSumShuntVolt = 0;
+		_tempsensor.setResolution(MCP9808Resolution); // 0.0625°C 250 ms
+		logi("MCP9808 ready!");
 	}
 
 	void Battery::LowLoad_Off()
@@ -105,8 +103,8 @@ namespace BatteryTester
 	// °C * 10
 	uint16_t Battery::Temperature()
 	{
-		tempsensor.wake();
-		float c = tempsensor.readTempC();
+		_tempsensor.wake();
+		float c = _tempsensor.readTempC();
 		return c * 10; // °C X 10 as uint16
 	}
 

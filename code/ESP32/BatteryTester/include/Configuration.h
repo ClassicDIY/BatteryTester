@@ -34,7 +34,7 @@ namespace BatteryTester
 		void setStorageVoltage(uint16_t val) { if (val < 4200) {_storageVoltage = val, _isDirty = true;}}; // Voltage setpoint for battery storage charge (3.7V)
 		void setStabilizeDuration(uint16_t val){ if (val < 600)	{_stabilizeDuration = val,	_isDirty = true;}}; // amount of seconds to monitor during stabilize operation
 		void setChargeCurrent(uint8_t val) {if (val < 4) {_chargeCurrent = val, _isDirty = true;}}; // 0:100 mA 1:400 mA 2: 700mA 3:1000 mA
-		void setChargeDischargeCycleCount(uint8_t val) {_chargeCurrent = val,	_isDirty = true;}; // number of charge-discharge cycles to perform during Cycle() operation
+		void setChargeDischargeCycleCount(uint8_t val) {_chargeDischargeCycleCount = val,	_isDirty = true;}; // number of charge-discharge cycles to perform during Cycle() operation
 
 		bool isDirty() { return _isDirty; }
 		void Load();

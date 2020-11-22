@@ -26,12 +26,13 @@ namespace BatteryTester
         uint16_t Temperature();
 
     private:
-        Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+        Adafruit_MCP9808 _tempsensor = Adafruit_MCP9808();
         float Scale(uint32_t v);
 		void LowLoad_Off();
 		void LowLoad_On();
         
         uint8_t _highBatPin;
+        uint8_t _i2cAddress;
         uint8_t _shuntPin;
         uint8_t _lowLoad;
         uint8_t _tp4056Prog;

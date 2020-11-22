@@ -51,7 +51,7 @@ namespace BatteryTester
 		uint32_t _internalResistance;
 
 		Battery *_pBattery;
-		State _state; // current published state
+		State _state = Unspecified; // current published state
 		int _currentStage; // index of the current state of execution
 		State* _currentOperation = 0;
 		int _cycleCount = 0;

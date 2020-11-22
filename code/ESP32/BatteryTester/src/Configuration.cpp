@@ -46,7 +46,7 @@ namespace BatteryTester
 	{
 		if (_preferences.begin(TAG, false))
 		{
-			if (digitalRead(FACTORY_RESET_PIN) == LOW)
+			if (FACTORY_RESET_PIN != -1 && digitalRead(FACTORY_RESET_PIN) == LOW)
 			{
 				logw("FACTORY_RESET_PIN LOW, loading default settings");
 				LoadFactoryDefault();
@@ -127,7 +127,7 @@ namespace BatteryTester
 		serialWord(&(buffer[6]), _stabilizeDuration);
 		serialByte(&(buffer[8]), _chargeCurrent);
 		serialByte(&(buffer[9]), _chargeDischargeCycleCount);
-		buffer[STORAGE_SIZE] = CalcChecksum(buffer);
+		buffer[STORAGE_SIZE-1] = CalcChecksum(buffer);
 		_preferences.putBytes("Configuration", buffer, STORAGE_SIZE);
 		_isDirty = false;
 		logd("Saved settings");

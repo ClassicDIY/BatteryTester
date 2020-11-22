@@ -185,7 +185,7 @@ namespace BatteryTester
 						}
 						if (_JSdoc.containsKey("StabilizeDuration"))
 						{
-							uint16_t val = _JSdoc["stabilizeDuration"];
+							uint16_t val = _JSdoc["StabilizeDuration"];
 							_config.setStabilizeDuration(val);
 						}
 						if (_JSdoc.containsKey("ChargeCurrent"))
@@ -294,8 +294,7 @@ namespace BatteryTester
 			_mqttUserPassword[0] = '\0';
 			strcpy(_mqttRootTopic, _iotWebConf.getThingName());
 			_mqttTesterNumber[0] = '\0';
-			// _iotWebConf.resetWifiAuthInfo();
-			SetupWifi(MySSID, MyWIFIPassword);
+			_iotWebConf.resetWifiAuthInfo();
 		}
 		else
 		{
@@ -329,27 +328,7 @@ namespace BatteryTester
 	void IOT::Run()
 	{
 		_iotWebConf.doLoop();
-		if (_clientsConfigured && WiFi.isConnected())
-		{
-			// ToDo MQTT monitoring
-			// if (_mqttClient.connected())
-			// {
-			// 	if (_lastPublishTimeStamp < millis())
-			// 	{
-			// 		_lastPublishTimeStamp = millis() + _currentPublishRate;
-			// 		_publishCount++;
-			// 		publishReadings();
-			// 		// Serial.printf("%d ", _publishCount);
-			// 	}
-			// 	if (!_stayAwake && _publishCount >= WAKE_COUNT)
-			// 	{
-			// 		_publishCount = 0;
-			// 		_currentPublishRate = SNOOZE_PUBLISH_RATE;
-			// 		logd("Snoozing!");
-			// 	}
-			// }
-		}
-		else
+		if (!_clientsConfigured || !WiFi.isConnected())
 		{
 			// process serial command from flasher tool to setup wifi
 			if (Serial.peek() == '{')

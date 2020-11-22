@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esp_log.h"
-#define TAG "Battery"
+#define TAG "BatteryTester"
 
 void inline printHexString(char* ptr, int len)
 {

@@ -23,24 +23,27 @@ namespace BatteryTester
 
 		TesterError _errorState;
 		void Setup(ThreadController *controller);
-		// void Track();
-		// void Resume();
-		// void Park(bool protect);
-		TesterState getState();
-		void setState(TesterState state);
+		void Charge();
+		void Cycle();
+		void DoDischarge();
+		void Storage();
+		void MeasureInternalResistance();
+		void setState(State state);
 		void run();
-		void SetChargeCurrent();
 		Battery *pBattery() { return _pBattery; }
 
 	private:
+		void SetChargeCurrent();
+        const char* StateText();
+		const char* StateText(State s);
 		uint8_t _batteryPosition; // 1 or 2;
 		uint8_t _tp4056Enable;
-		uint8_t _lowLoad;
 		uint8_t _tp4056Standby;
 		uint8_t _chargeCurrent4k;
 		uint8_t _chargeCurrent2k;
 		uint8_t _dischargeLed;
 		uint8_t _dutyCycle;
+		boolean _blinker;
 
 		uint32_t _mAs = 0; //mA seconds
 		unsigned long _previousMillis = 0;
@@ -50,20 +53,21 @@ namespace BatteryTester
 		uint32_t _internalResistance;
 
 		Battery *_pBattery;
-		TesterState _state;
+		State _state; // current published state
+		int _currentStage; // index of the current state of execution
+		State* _currentOperation = 0;
+		int _cycleCount = 0;
 
-		uint32_t DischargeTime();
 		void TP4056_Off();
 		void TP4056_On();
 		boolean TP4056_OnStandby();
 		boolean TP4056_Charging();
 		void Load_Off();
 		void Load_On();
-		void LowLoad_Off();
-		void LowLoad_On();
+		void BlinkLED();
 		void DischargeLed_Off();
 		void DischargeLed_On();
-		TesterState NextState();
+		State NextState();
 	};
 
 } // namespace BatteryTester

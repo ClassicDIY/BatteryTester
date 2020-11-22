@@ -2,24 +2,25 @@
 
 namespace BatteryTester
 {
-	enum TesterState
+	enum State
 	{
 		Initialize, 
 		Standby, 
 		NoBatteryFound, 
 		Monitor,
+		Stabilize,
 		InternalResistance, 
-		Charge, 
+		FullCharge, 
 		Discharge, 
-		Storage, 
+		StorageCharge, 
 		ThermalShutdown, 
-		Complete, 
-		
+		CycleConplete,
+		Complete
 	};
 
 	enum TesterError
 	{
 		Tester_Ok,
-		Tester_FailedToAccessRTC
+		Tester_MCP9808_Failed
 	};
 }

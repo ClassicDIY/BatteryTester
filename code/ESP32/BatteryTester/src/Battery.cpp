@@ -3,21 +3,24 @@
 
 namespace BatteryTester
 {
-	Battery::Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress)
+	Battery::Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress, uint8_t lowLoad)
 	{
 		_highBatPin = highBatPin;
 		_shuntPin = shuntPin;
 		_tp4056Prog = tp4056Prog;
-		_i2cAddress = i2cAddress;
+		_lowLoad = lowLoad;
 		pinMode(_tp4056Prog, INPUT);
 		pinMode(_highBatPin, INPUT);
 		pinMode(_shuntPin, INPUT);
-		if (!tempsensor.begin(i2cAddress)) {
-    		logw("Couldn't find MCP9808! Check your connections and verify the address is correct.");
+		pinMode(_lowLoad, OUTPUT_OPEN_DRAIN);
+		LowLoad_Off();
+		if (!tempsensor.begin(i2cAddress))
+		{
+			logw("Couldn't find MCP9808! for address %x Check your connections and verify the address is correct.", i2cAddress);
 		}
 		else
 		{
-			tempsensor.setResolution(MCP9808Resolution);  // 0.0625°C 250 ms
+			tempsensor.setResolution(MCP9808Resolution); // 0.0625°C 250 ms
 		}
 		Reset();
 	}
@@ -36,14 +39,19 @@ namespace BatteryTester
 		_movingAverageSumShuntVolt = 0;
 	}
 
-	void Battery::Calibrate()
+	void Battery::LowLoad_Off()
 	{
-		int count = AverageCount * 5;
-		while (--count != 0) //Get 5 * AverageCount
-		{
-			run();
-			delay(3); // let ADC settle before next sample 3ms
-		}
+		digitalWrite(_lowLoad, HIGH);
+	}
+
+	void Battery::LowLoad_On()
+	{
+		digitalWrite(_lowLoad, LOW);
+	}
+
+	boolean Battery::CheckForBattery()
+	{
+		return OpenVoltage() >= MinimumBatteryVoltageForDetection;
 	}
 
 	float Battery::Scale(uint32_t reading)
@@ -57,6 +65,15 @@ namespace BatteryTester
 		// and improves the default ADC reading accuracy to within 1%.
 		float sensorReading = -0.000000000000016 * pow(reading, 4) + 0.000000000118171 * pow(reading, 3) - 0.000000301211691 * pow(reading, 2) + 0.001109019271794 * reading + 0.034143524634089;
 		return sensorReading;
+	}
+
+	uint16_t Battery::OpenVoltage()
+	{
+		LowLoad_On();
+		delay(100);
+		MMA();
+		LowLoad_Off();
+		return Voltage();
 	}
 
 	// in mV
@@ -88,7 +105,7 @@ namespace BatteryTester
 	// °C * 10
 	uint16_t Battery::Temperature()
 	{
-		tempsensor.wake(); 
+		tempsensor.wake();
 		float c = tempsensor.readTempC();
 		return c * 10; // °C X 10 as uint16
 	}
@@ -96,8 +113,12 @@ namespace BatteryTester
 	void Battery::run()
 	{
 		runned();
+		MMA();
+	}
+
+	void Battery::MMA()
+	{
 		unsigned long timeStamp = millis();
-		int i = 0;
 		while (millis() - timeStamp < MMASamplePeriod)
 		{
 			// charge current
@@ -112,9 +133,7 @@ namespace BatteryTester
 			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt - _movingAverageShuntVolt;
 			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + analogRead(_shuntPin);
 			_movingAverageShuntVolt = _movingAverageSumShuntVolt / AverageCount;
-			i++;
 		}
-		// logd("%d samples", i);
 	}
 
 } // namespace BatteryTester

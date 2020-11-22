@@ -81,7 +81,7 @@ namespace BatteryTester
 	void Configuration::Load()
 	{
 
-		if (_preferences.begin("BatteryTester", false))
+		if (_preferences.begin(TAG, false))
 		{
 			if (digitalRead(FACTORY_RESET_PIN) == LOW)
 			{
@@ -98,7 +98,10 @@ namespace BatteryTester
 				_lowCutoff = deserialWord(&(_buffer[0]));
 				_thermalShutdownTemperature = deserialWord(&(_buffer[2]));
 				_storageVoltage = deserialWord(&(_buffer[4]));
-				_chargeCurrent = deserialByte(&(_buffer[6]));
+				_lowCutoff = deserialWord(&(_buffer[6]));
+				_chargeCurrent = deserialByte(&(_buffer[8]));
+				_chargeDischargeCycleCount = deserialByte(&(_buffer[9]));
+				
 				_isDirty = false;
 			}
 			else
@@ -121,7 +124,9 @@ namespace BatteryTester
 		_thermalShutdownTemperature = ThermalShutdownTemperature;
 		_lowCutoff = LowCutoff;
 		_storageVoltage = StorageVoltage;
+		_stabilizeDuration = StabilizeDuration;
 		_chargeCurrent = DefaultChargeCurrent;
+		_chargeDischargeCycleCount = ChargeDischargeCycleCount;
 		_isDirty = true;
 	}
 
@@ -157,7 +162,9 @@ namespace BatteryTester
 		serialWord(&(buffer[0]), _lowCutoff);
 		serialWord(&(buffer[2]), _thermalShutdownTemperature);
 		serialWord(&(buffer[4]), _storageVoltage);
-		serialByte(&(buffer[6]), _chargeCurrent);
+		serialWord(&(buffer[6]), _stabilizeDuration);
+		serialByte(&(buffer[8]), _chargeCurrent);
+		serialByte(&(buffer[9]), _chargeDischargeCycleCount);
 		buffer[STORAGE_SIZE] = CalcChecksum(buffer);
 		_preferences.putBytes("Configuration", buffer, STORAGE_SIZE);
 		_isDirty = false;
@@ -212,6 +219,7 @@ namespace BatteryTester
 
 	void Configuration::PrintConfiguration()
 	{
-		logi("LowCutoff: %d ThermalShutdownTemperature: %d StorageVoltage: %d  ChargeCurrent: %d", getLowCutoff(), getThermalShutdownTemperature(), getStorageVoltage(), getChargeCurrent());
+		logi("LowCutoff: %d ThermalShutdownTemperature: %d StorageVoltage: %d  StabilizeDuration: %d ChargeCurrent: %d ChargeDischargeCycleCount: %d"
+		, getLowCutoff(), getThermalShutdownTemperature(), getStorageVoltage(), getStabilizeDuration(), getChargeCurrent(), getChargeDischargeCycleCount());
 	}
 } // namespace BatteryTester

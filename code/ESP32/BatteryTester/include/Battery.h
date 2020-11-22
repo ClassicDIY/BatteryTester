@@ -6,18 +6,20 @@
 
 extern BatteryTester::IOT _iot;
 
+
 namespace BatteryTester
 {
     class Battery : public Thread
     {
     public:
-        Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress);
+        Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress, uint8_t lowLoad);
         ~Battery();
         void run();
         void Reset();
-        void Calibrate();
-
+        void MMA();
+		boolean CheckForBattery();
         uint16_t Voltage();
+        uint16_t OpenVoltage();
         uint16_t ShuntVoltage();
         int16_t ChargeCurrent();
         uint32_t DischargeCurrent();
@@ -26,10 +28,13 @@ namespace BatteryTester
     private:
         Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
         float Scale(uint32_t v);
+		void LowLoad_Off();
+		void LowLoad_On();
+        
         uint8_t _highBatPin;
         uint8_t _shuntPin;
+        uint8_t _lowLoad;
         uint8_t _tp4056Prog;
-        uint8_t _i2cAddress;
         uint32_t _AcsOffset; // ACS712 vout when no current
         uint32_t _movingAverageChargeCurrent;
         uint32_t _movingAverageSumChargeCurrent;

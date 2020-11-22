@@ -66,7 +66,7 @@ void setup()
 	_config.Load();
 	// Configure main worker thread
 	_workerThread->onRun(feed_watchdog);
-	_workerThread->setInterval(5000);
+	_workerThread->setInterval(2000);
 	_controller.add(_workerThread);
 	logi("Initializing battery");
 	_tester1.Setup(&_controller);

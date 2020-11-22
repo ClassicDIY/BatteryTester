@@ -17,6 +17,7 @@ namespace BatteryTester
 	HTTPUpdateServer _httpUpdater;
 	IotWebConf _iotWebConf(TAG, &_dnsServer, &_webServer, TAG, CONFIG_VERSION);
 	char _mqttRootTopic[STR_LEN];
+	char _mqttTesterNumber[5];
 	char _willTopic[STR_LEN];
 	char _mqttServer[IOTWEBCONF_WORD_LEN];
 	char _mqttPort[5];
@@ -25,10 +26,11 @@ namespace BatteryTester
 	u_int _uniqueId = 0;
 	IotWebConfSeparator seperatorParam = IotWebConfSeparator("MQTT");
 	IotWebConfParameter mqttServerParam = IotWebConfParameter("MQTT server", "mqttServer", _mqttServer, IOTWEBCONF_WORD_LEN);
-	IotWebConfParameter mqttPortParam = IotWebConfParameter("MQTT port", "mqttSPort", _mqttPort, 5, "text", NULL, "1883");
+	IotWebConfParameter mqttPortParam = IotWebConfParameter("MQTT port", "mqttPort", _mqttPort, 5, "text", NULL, "1883");
 	IotWebConfParameter mqttUserNameParam = IotWebConfParameter("MQTT user", "mqttUser", _mqttUserName, IOTWEBCONF_WORD_LEN);
 	IotWebConfParameter mqttUserPasswordParam = IotWebConfParameter("MQTT password", "mqttPass", _mqttUserPassword, IOTWEBCONF_WORD_LEN, "password");
-	IotWebConfParameter mqttRootTopicParam = IotWebConfParameter("MQTT Root Topic", "mqttRootTopic", _mqttRootTopic, IOTWEBCONF_WORD_LEN);
+	IotWebConfParameter mqttRootTopicParam = IotWebConfParameter("Tester Group Name", "mqttRootTopic", _mqttRootTopic, IOTWEBCONF_WORD_LEN, "text", NULL, "Battery");
+	IotWebConfParameter mqttTesterNumberParam = IotWebConfParameter("TesterNumber", "mqttTesterNumber", _mqttTesterNumber, 2, "text", "1,2...");
 	const char *ntpServer = "pool.ntp.org";
 
 	void onMqttConnect(bool sessionPresent)
@@ -37,12 +39,14 @@ namespace BatteryTester
 		char mqttCmndTopic[STR_LEN];
 		sprintf(mqttCmndTopic, "%s/cmnd/Mode", _mqttRootTopic);
 		uint16_t packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		sprintf(mqttCmndTopic, "%s/cmnd/Config", _mqttRootTopic);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		logd("MQTT subscribe, QoS 1, packetId: %d", packetIdSub);
 		_mqttClient.publish(_willTopic, 0, false, "Online");
-		_tester1.setState(Initialize);
-		_tester2.setState(Initialize);
+		_tester1.setState(Standby);
+		_tester2.setState(Standby);
 	}
 
 	void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
@@ -67,7 +71,7 @@ namespace BatteryTester
 		switch (event)
 		{
 		case SYSTEM_EVENT_STA_GOT_IP:
-			// logd("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
+			logd("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
 			doc["IP"] = WiFi.localIP().toString().c_str();
 			doc["ApPassword"] = TAG;
 			serializeJson(doc, s);
@@ -111,32 +115,37 @@ namespace BatteryTester
 				if (strncmp(payload, "Monitor", len) == 0)
 				{
 					_tester1.setState(Monitor);
-					// _tester2.setState(Monitor);
-				}
-				if (strncmp(payload, "InternalResistance", len) == 0)
-				{
-					_tester1.setState(InternalResistance);
-					_tester2.setState(InternalResistance);
-				}
-				if (strncmp(payload, "Charge", len) == 0)
-				{
-					_tester1.setState(Charge);
-					_tester2.setState(Charge);
-				}
-				if (strncmp(payload, "Discharge", len) == 0)
-				{
-					_tester1.setState(Discharge);
-					// _tester2.setState(Discharge);
-				}
-				if (strncmp(payload, "Storage", len) == 0)
-				{
-					_tester1.setState(Storage);
-					_tester2.setState(Storage);
+					_tester2.setState(Monitor);
 				}
 				if (strncmp(payload, "Standby", len) == 0)
 				{
 					_tester1.setState(Standby);
 					_tester2.setState(Standby);
+				}
+				if (strncmp(payload, "InternalResistance", len) == 0)
+				{
+					_tester1.MeasureInternalResistance();
+					_tester2.MeasureInternalResistance();
+				}
+				if (strncmp(payload, "Charge", len) == 0)
+				{
+					_tester1.Charge();
+					_tester2.Charge();
+				}
+				if (strncmp(payload, "Cycle", len) == 0)
+				{
+					_tester1.Cycle();
+					_tester2.Cycle();
+				}
+				if (strncmp(payload, "Discharge", len) == 0)
+				{
+					_tester1.DoDischarge();
+					_tester2.DoDischarge();
+				}
+				if (strncmp(payload, "Storage", len) == 0)
+				{
+					_tester1.Storage();
+					_tester2.Storage();
 				}
 			}
 			else if (strcmp(subtopic, "Config") == 0)
@@ -216,8 +225,12 @@ namespace BatteryTester
 		s += _mqttUserName;
 		s += "</ul>";
 		s += "<ul>";
-		s += "<li>MQTT root topic: ";
+		s += "<li>Tester Group Name: ";
 		s += _mqttRootTopic;
+		s += "</ul>";
+		s += "<ul>";
+		s += "<li>Tester Number: ";
+		s += _mqttTesterNumber;
 		s += "</ul>";
 		s += "Go to <a href='config'>configure page</a> to change values.";
 		s += "</body></html>\n";
@@ -226,19 +239,22 @@ namespace BatteryTester
 
 	void IOT::Init()
 	{
-		pinMode(FACTORY_RESET_PIN, INPUT_PULLUP);
 		_iotWebConf.setStatusPin(WIFI_STATUS_PIN);
 		_iotWebConf.setConfigPin(WIFI_AP_PIN);
-		if (digitalRead(FACTORY_RESET_PIN) == LOW)
+		if (FACTORY_RESET_PIN != -1)
 		{
-			EEPROM.begin(IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH);
-			for (byte t = 0; t < IOTWEBCONF_CONFIG_VERSION_LENGTH; t++)
+			if (digitalRead(FACTORY_RESET_PIN) == LOW)
 			{
-				EEPROM.write(IOTWEBCONF_CONFIG_START + t, 0);
+				pinMode(FACTORY_RESET_PIN, INPUT_PULLUP);
+				EEPROM.begin(IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH);
+				for (byte t = 0; t < IOTWEBCONF_CONFIG_VERSION_LENGTH; t++)
+				{
+					EEPROM.write(IOTWEBCONF_CONFIG_START + t, 0);
+				}
+				EEPROM.commit();
+				EEPROM.end();
+				logw("Factory Reset!");
 			}
-			EEPROM.commit();
-			EEPROM.end();
-			logw("Factory Reset!");
 		}
 		mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(5000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
 		WiFi.onEvent(WiFiEvent);
@@ -249,6 +265,7 @@ namespace BatteryTester
 		_iotWebConf.addParameter(&mqttUserNameParam);
 		_iotWebConf.addParameter(&mqttUserPasswordParam);
 		_iotWebConf.addParameter(&mqttRootTopicParam);
+		_iotWebConf.addParameter(&mqttTesterNumberParam);
 		boolean validConfig = _iotWebConf.init();
 		if (!validConfig)
 		{
@@ -258,7 +275,9 @@ namespace BatteryTester
 			_mqttUserName[0] = '\0';
 			_mqttUserPassword[0] = '\0';
 			strcpy(_mqttRootTopic, _iotWebConf.getThingName());
-			_iotWebConf.resetWifiAuthInfo();
+			_mqttTesterNumber[0] = '\0';
+			// _iotWebConf.resetWifiAuthInfo();
+			SetupWifi(MySSID, MyWIFIPassword);
 		}
 		else
 		{
@@ -329,16 +348,7 @@ namespace BatteryTester
 				{
 					if (doc.containsKey("ssid") && doc.containsKey("password"))
 					{
-						IotWebConfParameter *p = _iotWebConf.getWifiSsidParameter();
-						strcpy(p->valueBuffer, doc["ssid"]);
-						logd("Setting ssid: %s", p->valueBuffer);
-						p = _iotWebConf.getWifiPasswordParameter();
-						strcpy(p->valueBuffer, doc["password"]);
-						logd("Setting password: %s", p->valueBuffer);
-						p = _iotWebConf.getApPasswordParameter();
-						strcpy(p->valueBuffer, TAG); // reset to default AP password
-						_iotWebConf.configSave();
-						esp_restart(); // force reboot
+						SetupWifi(doc["ssid"], doc["password"]);
 					}
 					else
 					{
@@ -353,15 +363,31 @@ namespace BatteryTester
 		}
 	}
 
+	void IOT::SetupWifi(const char *ssid, const char *pw)
+	{
+		IotWebConfParameter *p = _iotWebConf.getWifiSsidParameter();
+		strcpy(p->valueBuffer, ssid);
+		logd("Setting ssid: %s", p->valueBuffer);
+		p = _iotWebConf.getWifiPasswordParameter();
+		strcpy(p->valueBuffer, pw);
+		logd("Setting password: %s", p->valueBuffer);
+		p = _iotWebConf.getApPasswordParameter();
+		strcpy(p->valueBuffer, TAG); // reset to default AP password
+		logd("Setting AP password: %s", p->valueBuffer);
+		_iotWebConf.configSave();
+		esp_restart(); // force reboot
+	}
+
 	void IOT::publish(uint8_t pos, const char *subtopic, const char *value, boolean retained)
 	{
 		if (_mqttClient.connected())
 		{
 			char buf[MaxMQTTTopic];
-			sprintf(buf, "%s/%d/stat/%s", _mqttRootTopic, pos, subtopic);
+			sprintf(buf, "%s/%s_%d/stat/%s", _mqttRootTopic, _mqttTesterNumber, pos, subtopic);
+
+			logd("publish %s|%s", buf, value);
 			_mqttClient.publish(buf, 0, retained, value);
 		}
 	}
-
 
 } // namespace BatteryTester

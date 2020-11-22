@@ -12,7 +12,6 @@ extern "C"
 #include "Configuration.h"
 
 #define STR_LEN 64    // general string buffer size
-#define CONFIG_LEN 32 // configuration string buffer size
 
 extern BatteryTester::Configuration _config;
 
@@ -29,6 +28,7 @@ namespace BatteryTester
         void publish(uint8_t pos, const char *subtopic, const char *value, boolean retained = false);
 
     private:
+        void SetupWifi(const char *ssid, const char *pw);
         bool _clientsConfigured = false;
     };
 } // namespace BatteryTester

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.3"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="State: " />
+
+                <TextView
+                    android:id="@+id/textState"
+                    style="@style/InfoValue"
+                    android:text=""
+                    android:textColor="@color/DarkRed" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="Voltage: " />
+
+                <TextView
+                    android:id="@+id/textVoltage"
+                    style="@style/InfoValue"
+                    android:text="-" />
+
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="Current: " />
+
+                <TextView
+                    android:id="@+id/textCurrent"
+                    style="@style/InfoValue"
+                    android:text="-" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="Resistance: " />
+
+                <TextView
+                    android:id="@+id/textResistance"
+                    style="@style/InfoValue"
+                    android:text="-" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="Energy: " />
+
+                <TextView
+                    android:id="@+id/textEnergy"
+                    style="@style/InfoValue"
+                    android:text="-" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="Temperature: " />
+
+                <TextView
+                    android:id="@+id/textTemperature"
+                    style="@style/InfoValue"
+                    android:text="-" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/InfoLayout">
+
+                <TextView
+                    style="@style/InfoLabel"
+                    android:text="Time: " />
+
+                <TextView
+                    android:id="@+id/textTime"
+                    style="@style/InfoValue"
+                    android:text="-" />
+            </LinearLayout>
+        </LinearLayout>
+        <ca.skyetracker.battery.CustomLineChart
+            android:id="@+id/chart1"
+            android:layout_width="0dp"
+            android:layout_weight="0.7"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
+</LinearLayout>

@@ -15,10 +15,7 @@ namespace BatteryTester
 		pinMode(_shuntPin, INPUT);
 		pinMode(_lowLoad, OUTPUT_OPEN_DRAIN);
 		LowLoad_Off();
-		if (!_tempsensor.begin(_i2cAddress))
-		{
-			logw("Couldn't find MCP9808! for address %x Check your connections and verify the address is correct.", _i2cAddress);
-		}
+		_tempsensor.begin(_i2cAddress);
 	}
 
 	Battery::~Battery()
@@ -34,7 +31,6 @@ namespace BatteryTester
 		_movingAverageShuntVolt = 0;
 		_movingAverageSumShuntVolt = 0;
 		_tempsensor.setResolution(MCP9808Resolution); // 0.0625°C 250 ms
-		logi("MCP9808 ready!");
 	}
 
 	void Battery::LowLoad_Off()

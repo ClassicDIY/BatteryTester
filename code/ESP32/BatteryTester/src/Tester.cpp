@@ -138,6 +138,9 @@ namespace BatteryTester
 		{
 			logd("Battery(%d): SetState %s", _batteryPosition, StateText(state));
 			_state = state;
+			_timeStamp = millis(); // state change time
+			_mAs = 0;
+			_modulo = -1;
 			switch (state)
 			{
 			case Standby:
@@ -162,21 +165,15 @@ namespace BatteryTester
 				DischargeLed_Off();
 				break;
 			case FullCharge:
-				_mAs = 0;
-				_previousMillis = millis();
 				_MaxTemperature = 0;
 				Load_Off();
 				TP4056_On();
 				DischargeLed_Off();
 				SetChargeCurrent();
-				_totalMillis = millis();
 				break;
 			case Discharge:
-				_mAs = 0;
 				_MaxTemperature = 0;
 				_dutyCycle = 128;
-				_previousMillis = millis();
-				_totalMillis = millis();
 				TP4056_Off();
 				Load_On();
 				DischargeLed_On();
@@ -205,7 +202,6 @@ namespace BatteryTester
 				DischargeLed_Off();
 				break;
 			case Stabilize:
-				_totalMillis = millis();
 				_MaxTemperature = 0;
 				Load_Off();
 				TP4056_Off();
@@ -216,11 +212,8 @@ namespace BatteryTester
 				_dutyCycle = 64;
 				_errorState = Tester_Ok;
 				_internalResistance = 0;
-				_previousMillis = 0;
-				_totalMillis = 0;
 				_currentOperation = 0;
 				_currentStage = 0;
-				_mAs = 0;
 				Load_Off();
 				TP4056_Off();
 				DischargeLed_Off();
@@ -249,9 +242,31 @@ namespace BatteryTester
 			DischargeLed_On();
 		}
 	}
+
+	void Tester::MQTTMonitor()
+	{
+		_modulo = ++_modulo % 10;
+		if (_modulo == 0)
+		{
+			float temp = _pBattery->Temperature();
+			if (temp < 1000) // skip bad MCP9808 readings?
+			{
+				uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
+				_doc["mode"] = StateText();
+				_doc["voltage"] = _pBattery->Voltage();
+				_doc["current"] = current;
+				_doc["temp"] = temp / 10;
+				String s;
+				serializeJson(_doc, s);
+				_iot.publish(_batteryPosition, "monitor", s.c_str(), false);
+			}
+		}
+	}
+
 	void Tester::run()
 	{
 		runned();
+
 		switch (_state)
 		{
 		case Monitor:
@@ -280,38 +295,36 @@ namespace BatteryTester
 		break;
 		case Stabilize:
 		{
-			if (millis() - _totalMillis > _config.getStabilizeDuration() * 1000)
+			unsigned long t = millis() - _timeStamp;
+			MQTTMonitor();
+			if (t > _config.getStabilizeDuration() * 1000)
 			{
 				_doc["mode"] = StateText();
 				_doc["voltage"] = _pBattery->Voltage();
 				_doc["maxTemperature"] = _MaxTemperature;
+				_doc["duration"] = t / 1000;
 				String s;
 				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
 				setState(NextState());
 			}
-			float temp = _pBattery->Temperature();
-			logd("Battery(%d): Stabilize  %d mV %d mv %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), _pBattery->ChargeCurrent(), temp / 10);
 		}
 		break;
 		case FullCharge:
 		{
-			unsigned long t = ((millis() - _previousMillis));
+			unsigned long t = millis() - _timeStamp;
 			_mAs += _pBattery->ChargeCurrent() * t / 1000;
-			_previousMillis = millis();
-			float temp = _pBattery->Temperature();
-			logd("Battery(%d): FullCharge  %d mV %d mA %2.1f °C", _batteryPosition, _pBattery->Voltage(), _pBattery->ChargeCurrent(), temp / 10);
+			MQTTMonitor();
 			if (TP4056_OnStandby())
 			{
 				TP4056_Off();
 				delay(500);
 				if (_pBattery->CheckForBattery())
 				{
-					_totalMillis = millis() - _totalMillis;
 					_doc["mode"] = StateText();
-					_doc["charge_time"] = _totalMillis / 1000;
 					_doc["Energy"] = _mAs / 3600;
 					_doc["maxTemperature"] = _MaxTemperature;
+					_doc["duration"] = t / 1000;
 					String s;
 					serializeJson(_doc, s);
 					_iot.publish(_batteryPosition, "result", s.c_str(), false);
@@ -322,7 +335,6 @@ namespace BatteryTester
 		break;
 		case InternalResistance:
 		{
-
 			_pBattery->enabled = false;
 			Load_Off();
 			uint16_t voc = _pBattery->OpenVoltage();
@@ -360,12 +372,12 @@ namespace BatteryTester
 		break;
 		case Discharge:
 		{
+			unsigned long t = millis() - _timeStamp;
+			MQTTMonitor();
 			if (_pBattery->Voltage() >= _config.getLowCutoff())
 			{
 				int32_t current = _pBattery->DischargeCurrent();
-				unsigned long t = ((millis() - _previousMillis));
 				_mAs += current * t / 1000;
-				_previousMillis = millis();
 				if (current > 550 && _dutyCycle > 0)
 				{
 					// --_dutyCycle;
@@ -378,8 +390,6 @@ namespace BatteryTester
 					_dutyCycle += 10;
 					Load_On();
 				}
-				float temp = _pBattery->Temperature();
-				logd("Discharge: Battery(%d) %d mV %d mV %d mA %2.1f °C dutyCycle %2.0f %%", _batteryPosition, _pBattery->Voltage(), _pBattery->ShuntVoltage(), current, temp / 10, _dutyCycle / 2.55);
 			}
 			else
 			{
@@ -387,15 +397,14 @@ namespace BatteryTester
 				DischargeLed_Off();
 				if (_pBattery->CheckForBattery())
 				{
-					_totalMillis = millis() - _totalMillis;
 					_doc["mode"] = StateText();
-					_doc["cischarge_Time"] = _totalMillis / 1000;
 					_doc["capacity"] = _mAs / 3600;
 					_doc["maxTemperature"] = _MaxTemperature;
+					_doc["duration"] = t / 1000;
 					String s;
 					serializeJson(_doc, s);
 					_iot.publish(_batteryPosition, "result", s.c_str(), false);
-					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, _totalMillis, _mAs / 3600);
+					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, t / 1000, _mAs / 3600);
 					setState(NextState());
 				}
 			}
@@ -403,11 +412,14 @@ namespace BatteryTester
 		break;
 		case StorageCharge:
 		{
+			MQTTMonitor();
 			if (_pBattery->Voltage() >= _config.getStorageVoltage())
 			{
+				unsigned long t = millis() - _timeStamp;
 				_doc["mode"] = StateText();
 				_doc["voltage"] = _pBattery->Voltage();
 				_doc["maxTemperature"] = _MaxTemperature;
+				_doc["duration"] = t / 1000;
 				String s;
 				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);
@@ -420,10 +432,12 @@ namespace BatteryTester
 			_cycleCount--;
 			if (_cycleCount > 0)
 			{
+				unsigned long t = millis() - _timeStamp;
 				_doc["mode"] = StateText();
 				_doc["voltage"] = _pBattery->Voltage();
 				_doc["cycle"] = _cycleCount;
 				_doc["maxTemperature"] = _MaxTemperature;
+				_doc["duration"] = t / 1000;
 				String s;
 				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, "result", s.c_str(), false);

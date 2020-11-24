@@ -224,7 +224,6 @@ namespace BatteryTester
 			// -- Captive portal request were already served.
 			return;
 		}
-		logd("handleRoot");
 		String s = "<!DOCTYPE html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\"/>";
 		s += "<title>";
 		s += _iotWebConf.getThingName();
@@ -314,7 +313,7 @@ namespace BatteryTester
 					int port = atoi(_mqttPort);
 					_mqttClient.setServer(ip, port);
 					_mqttClient.setCredentials(_mqttUserName, _mqttUserPassword);
-					sprintf(_willTopic, "%s/tele/LWT", _mqttRootTopic);
+					sprintf(_willTopic, "%s/tele/%s/LWT", _mqttRootTopic, _mqttTesterNumber);
 					_mqttClient.setWill(_willTopic, 0, false, "Offline");
 				}
 			}
@@ -379,7 +378,7 @@ namespace BatteryTester
 		if (_mqttClient.connected())
 		{
 			char buf[MaxMQTTTopic];
-			sprintf(buf, "%s/%s_%d/stat/%s", _mqttRootTopic, _mqttTesterNumber, pos, subtopic);
+			sprintf(buf, "%s/stat/%s_%d/%s", _mqttRootTopic, _mqttTesterNumber, pos, subtopic);
 
 			logd("publish %s|%s", buf, value);
 			_mqttClient.publish(buf, 0, retained, value);

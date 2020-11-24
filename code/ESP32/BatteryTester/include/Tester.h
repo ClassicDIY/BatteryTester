@@ -32,6 +32,7 @@ namespace BatteryTester
 		void SetChargeCurrent();
         const char* StateText();
 		const char* StateText(State s);
+		void MQTTMonitor();
 
 		StaticJsonDocument<MaxMQTTPayload> _doc;
 		uint8_t _batteryPosition; // 1 or 2;
@@ -42,10 +43,9 @@ namespace BatteryTester
 		uint8_t _dischargeLed;
 		uint8_t _dutyCycle;
 		boolean _blinker;
-
+		int _modulo;
 		uint32_t _mAs = 0; //mA seconds
-		unsigned long _previousMillis = 0;
-		unsigned long _totalMillis = 0;
+		unsigned long _timeStamp = 0;
 		uint16_t _MaxTemperature; // in �C * 10
 		unsigned long _previousPoll = 0;
 		uint32_t _internalResistance;

@@ -25,14 +25,15 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.lifecycle:lifecycle-process:2.2.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestCompile('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
-    implementation 'com.android.support:support-compat:28.+'
-    implementation 'com.android.support:appcompat-v7:28.+'
-    implementation 'com.android.support:support-v13:28.+'
+    implementation 'androidx.core:core:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v13:1.0.0'
     implementation 'joda-time:joda-time:2.6'
     implementation 'com.github.PhilJay:MPAndroidChart:v2.2.4'
     implementation 'com.google.code.gson:gson:2.3.1'

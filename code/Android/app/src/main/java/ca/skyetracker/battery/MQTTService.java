@@ -22,10 +22,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Binder;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -41,11 +39,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class MQTTService extends Service {
     private final IBinder mBinder = new MQTTServiceBinder();
@@ -169,7 +163,7 @@ public class MQTTService extends Service {
         }
         if (rVal == false) {
             Log.d(getClass().getName(), "connectToMQTT");
-            String brokerUrl = String.format("tcp://%s:%d", "192.168.86.25", 1880);
+            String brokerUrl = String.format("tcp://%s:%d", "192.168.86.25", 1883);
             if (mqttClient == null) {
                 String clientId = Constants.TAG + System.currentTimeMillis() * 1000000L;
                 mqttClient = new MqttAndroidClient(getApplicationContext(), brokerUrl, clientId);
@@ -255,8 +249,7 @@ public class MQTTService extends Service {
                     String str = mqttMessage.toString();
                     Gson gson = gsonBuilder.create();
                     String[] elements = topic.split("/");
-                    String deviceName = elements.length >= 4 ? elements[elements.length - 3] : "classic";  // devicename
-                    Log.d(getClass().getName(), "MQTT messageArrived for " + deviceName);
+                      Log.d(getClass().getName(), "MQTT messageArrived: " + topic + "|" + str );
 //                    ChargeControllers chargeControllers = MonitorApplication.chargeControllers();
 //                    ChargeController current = chargeControllers.getCurrentChargeController();
 //                    if (current != null && current.deviceName().compareTo(deviceName) == 0) {

@@ -1,9 +1,13 @@
 package ca.skyetracker.battery;
 
 import android.app.Application;
-import android.arch.lifecycle.LifecycleObserver;
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.OnLifecycleEvent;
+
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.ProcessLifecycleOwner;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -14,9 +18,10 @@ import android.util.Log;
 
 import com.google.gson.GsonBuilder;
 
-import static android.arch.lifecycle.Lifecycle.Event.ON_RESUME;
-import static android.arch.lifecycle.Lifecycle.Event.ON_START;
-import static android.arch.lifecycle.Lifecycle.Event.ON_STOP;
+import static androidx.lifecycle.Lifecycle.Event.ON_ANY;
+import static androidx.lifecycle.Lifecycle.Event.ON_RESUME;
+import static androidx.lifecycle.Lifecycle.Event.ON_START;
+import static androidx.lifecycle.Lifecycle.Event.ON_STOP;
 
 /**
  * Created by Me on 10/21/2017.
@@ -31,7 +36,7 @@ public class MainApplication extends Application implements LifecycleObserver {
     public void onCreate() {
         super.onCreate();
         context = this.getBaseContext();
-        bindService(new Intent(this, MQTTService.class), mqttServiceConnection, Context.BIND_AUTO_CREATE);
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
     }
 
     private ServiceConnection mqttServiceConnection = new ServiceConnection() {

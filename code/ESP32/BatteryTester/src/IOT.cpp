@@ -38,10 +38,10 @@ namespace BatteryTester
 	{
 		logd("Connected to MQTT. Session present: %d", sessionPresent);
 		char mqttCmndTopic[STR_LEN];
-		sprintf(mqttCmndTopic, "%s/cmnd/Mode", _mqttRootTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic,  Subtopics[Subtopic::mode]);
 		uint16_t packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
-		sprintf(mqttCmndTopic, "%s/cmnd/Config", _mqttRootTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::config]);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		logd("MQTT subscribe, QoS 1, packetId: %d", packetIdSub);
@@ -110,46 +110,46 @@ namespace BatteryTester
 			strncpy(buf, payload, len);
 			buf[len] = 0;
 			logd("Payload: %s", buf);
-			if (strcmp(subtopic, "Mode") == 0) // mode of operation
+			if (strcmp(subtopic, Subtopics[Subtopic::mode]) == 0) // mode of operation
 			{
-				if (strncmp(payload, "Monitor", len) == 0)
+				if (strncmp(payload, States[State::Monitor], len) == 0)
 				{
-					_tester1.setState(Monitor);
-					_tester2.setState(Monitor);
+					_tester1.setState(State::Monitor);
+					_tester2.setState(State::Monitor);
 				}
-				else if (strncmp(payload, "Standby", len) == 0)
+				else if (strncmp(payload, States[State::Standby], len) == 0)
 				{
-					_tester1.setState(Standby);
-					_tester2.setState(Standby);
+					_tester1.setState(State::Standby);
+					_tester2.setState(State::Standby);
 				}
 				else
 				{
 					Operation op = NoOp;
-					if (strncmp(payload, "Cycle", len) == 0)
+					if (strncmp(payload, Operations[TestCycleOperation], len) == 0)
 					{
 						op = TestCycleOperation;
 					}
-					else if (strncmp(payload, "Charge", len) == 0)
+					else if (strncmp(payload, Operations[ChargeOperation], len) == 0)
 					{
 						op = ChargeOperation;
 					}
-					else if (strncmp(payload, "TestAndStore", len) == 0)
+					else if (strncmp(payload, Operations[TestAndStoreOperation], len) == 0)
 					{
 						op = TestAndStoreOperation;
 					}
-					else if (strncmp(payload, "TestAndCharge", len) == 0)
+					else if (strncmp(payload, Operations[TestAndChargeOperation], len) == 0)
 					{
 						op = TestAndChargeOperation;
 					}
-					else if (strncmp(payload, "Storage", len) == 0)
+					else if (strncmp(payload, Operations[StorageOperation], len) == 0)
 					{
 						op = StorageOperation;
 					}
-					else if (strncmp(payload, "InternalResistance", len) == 0)
+					else if (strncmp(payload, Operations[InternalResistanceOperation], len) == 0)
 					{
 						op = InternalResistanceOperation;
 					}
-					else if (strncmp(payload, "Discharge", len) == 0)
+					else if (strncmp(payload, Operations[DischargeOperation], len) == 0)
 					{
 						op = DischargeOperation;
 					}
@@ -157,7 +157,7 @@ namespace BatteryTester
 					_tester2.Perform(op);
 				}
 			}
-			else if (strcmp(subtopic, "Config") == 0)
+			else if (strcmp(subtopic, Subtopics[Subtopic::config]) == 0)
 			{
 				if (strncmp(payload, "LoadDefaultSettings", len) == 0) // reset config to factory default
 				{

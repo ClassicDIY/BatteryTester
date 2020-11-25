@@ -30,8 +30,6 @@ namespace BatteryTester
 
 	private:
 		void SetChargeCurrent();
-        const char* StateText();
-		const char* StateText(State s);
 		void MQTTMonitor();
 
 		StaticJsonDocument<MaxMQTTPayload> _doc;

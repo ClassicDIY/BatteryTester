@@ -18,12 +18,15 @@
 
 package ca.skyetracker.battery;
 
-import java.util.UUID;
-
-public class Constants {
-    public static final String TAG = "BatteryTester";
-
-    // SPP UUID service
-    public static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    public static final String CA_BATTERY_TOAST = "ca.battery.Toast";
+public enum ElementId {
+    index,
+    state,
+    energy,
+    maxTemperature,
+    duration,
+    voltage,
+    cycle,
+    current,
+    temperature,
+    internalResistance
 }

@@ -1,3 +1,21 @@
+/*
+ *  Created by ClassicDIY on 25/11/20 6:55 AM
+ *  Copyright (c) 2020 . All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package ca.skyetracker.battery;
 
 import android.app.Activity;
@@ -7,7 +25,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.ViewPager;
 
 import android.widget.Toast;
@@ -119,7 +136,7 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         if (!isReceiverRegistered) {
-            LocalBroadcastManager.getInstance(this).registerReceiver(mReadingsReceiver, new IntentFilter("ca.skyetracker.battery.cell"));
+           getApplicationContext().registerReceiver(mReadingsReceiver, new IntentFilter("ca.skyetracker.battery.cell"));
             isReceiverRegistered = true;
         }
     }
@@ -129,7 +146,7 @@ public class MainActivity extends Activity {
         super.onDestroy();
         if (isReceiverRegistered) {
             try {
-                LocalBroadcastManager.getInstance(this).unregisterReceiver(mReadingsReceiver);
+                getApplicationContext().unregisterReceiver(mReadingsReceiver);
             } catch (IllegalArgumentException e) {
                 // Do nothing
             }
@@ -141,16 +158,16 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                Transfer cellTransfer = (Transfer)intent.getSerializableExtra("cell");
-                if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
-                    last_sQ = cellTransfer.sQ;
-                    int index = cellTransfer.sN;
-                    ArrayList<RecordEntry> record = records[index];
-                    if (record.size() > 10000) {
-                        record.remove(0);
-                    }
-                    record.add(new RecordEntry(cellTransfer.sV, cellTransfer.sQ));
-                }
+//                Transfer cellTransfer = (Transfer)intent.getSerializableExtra("cell");
+//                if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
+//                    last_sQ = cellTransfer.sQ;
+//                    int index = cellTransfer.sN;
+//                    ArrayList<RecordEntry> record = records[index];
+//                    if (record.size() > 10000) {
+//                        record.remove(0);
+//                    }
+//                    record.add(new RecordEntry(cellTransfer.sV, cellTransfer.sQ));
+//                }
             }
             catch (Exception ex) {
                 ex.printStackTrace();

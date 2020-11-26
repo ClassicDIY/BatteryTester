@@ -1,17 +1,20 @@
+
 /*
- * Copyright (c) 2014. FarrelltonSolar
+ *  Created by ClassicDIY on 25/11/20 6:56 AM
+ *  Copyright (c) 2020 . All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
+ *
  */
 
 package ca.skyetracker.battery;
@@ -22,8 +25,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -47,6 +50,7 @@ public class MQTTService extends Service {
     private MqttAndroidClient mqttClient;
     private Timer mqttWakeTimer;
     private GsonBuilder gsonBuilder;
+
     public MQTTService() {
 
     }
@@ -69,40 +73,19 @@ public class MQTTService extends Service {
         }
     }
 
-//    @Override
-//    public void onCreate() {
-//        super.onCreate();
-//        mHandler = new Handler();
-//        bluetoothReceiver = new Handler() {
-//            public void handleMessage(android.os.Message msg) {
-//                switch (msg.what) {
-//                    case RECEIVE_MESSAGE: // if receive message
-//                        String strIncom = (String) msg.obj;
-//                        BroadcastMessage(strIncom, "ca.skyetracker.battery.cell");
-//                        Log.d(Constants.TAG, "...String:" + strIncom + "Byte:" + msg.arg1 + "...");
-//                        break;
-//                }
-//            }
-//        };
-//        startBluetoothStateBroadcast();
-//        LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(mCommandReceiver, new IntentFilter("ca.skyetracker.battery.Write"));
-//    }
-
-
     @Override
     public void onCreate() {
         Log.d(getClass().getName(), "onCreate");
         super.onCreate();
         gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapterFactory(new BundleTypeAdapterFactory());
-        LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(mCommandReceiver, new IntentFilter("ca.skyetracker.battery.Write"));
+        getBaseContext().registerReceiver(mCommandReceiver, new IntentFilter("ca.skyetracker.battery.Write"));
     }
 
-    private void BroadcastMessage(String data, String action) {
-        Intent commandIntent = new Intent(action, null, getBaseContext(), MQTTService.class);
-        Transfer transfer = new Transfer(data);
-        commandIntent.putExtra("cell", transfer);
-        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(commandIntent);
+    private void BroadcastMessage(Bundle data, String action) {
+        Intent commandIntent = new Intent().setAction(action);
+        commandIntent.putExtras(data);
+       this.sendBroadcast(commandIntent);
     }
 
     //    Our handler for received Intents.
@@ -222,6 +205,7 @@ public class MQTTService extends Service {
             public void onSuccess(IMqttToken iMqttToken) {
                 Log.d(getClass().getName(), "Subscribe Successful " + (iMqttToken.getTopics().length > 0 ? iMqttToken.getTopics()[0] : ""));
             }
+
             @Override
             public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
                 Log.w(getClass().getName(), "Subscribe Failed " + iMqttToken.getException().getMessage());
@@ -249,30 +233,11 @@ public class MQTTService extends Service {
                     String str = mqttMessage.toString();
                     Gson gson = gsonBuilder.create();
                     String[] elements = topic.split("/");
-                      Log.d(getClass().getName(), "MQTT messageArrived: " + topic + "|" + str );
-//                    ChargeControllers chargeControllers = MonitorApplication.chargeControllers();
-//                    ChargeController current = chargeControllers.getCurrentChargeController();
-//                    if (current != null && current.deviceName().compareTo(deviceName) == 0) {
-//                        if (topic.endsWith("readings")) {
-//                            Bundle b = gson.fromJson(str, Bundle.class);
-//                            Readings readings = new Readings(b);
-//                            readings.broadcastReadings(MonitorApplication.getAppContext(), "MQTT", Constants.CA_FARRELLTONSOLAR_CLASSIC_READINGS);
-//                        } else if (topic.endsWith("info")) {
-//                            ChargeControllerTransfer t = gson.fromJson(str, ChargeControllerTransfer.class);
-//                            t.deviceName = deviceName; // use name defined in publisher
-//                            current.LoadTransfer(t);
-//                            if (current.isReachable() == false) {
-//                                chargeControllers.setReachable(deviceName, true);
-//                            }
-//                        } else if (topic.endsWith("LWT")) {
-//                            if (str.compareTo("Offline") == 0) {
-//                                clearReadings(Constants.CA_FARRELLTONSOLAR_CLASSIC_READINGS);
-//                                chargeControllers.setReachable(deviceName, false);
-//                            } else {
-//                                WakeMQTT("wake");
-//                            }
-//                        }
-//                    }
+                    Log.d(getClass().getName(), "MQTT messageArrived: " + topic + "|" + str);
+
+                    if (topic.endsWith("monitor")) {
+                        BroadcastMessage(gson.fromJson(str, Bundle.class), "ca.skyetracker.battery.cell");
+                    }
 //                    else {
 //                        if (topic.endsWith("readings")) {
 //                            Bundle b = gson.fromJson(str, Bundle.class);
@@ -302,28 +267,11 @@ public class MQTTService extends Service {
         });
     }
 
-    private void clearReadings(String action) {
-//        Readings readings = new Readings();
-//        readings.set(RegisterName.Power, 0.0f);
-//        readings.set(RegisterName.BatVoltage, 0.0f);
-//        readings.set(RegisterName.BatCurrent, 0.0f);
-//        readings.set(RegisterName.PVVoltage, 0.0f);
-//        readings.set(RegisterName.PVCurrent, 0.0f);
-//        readings.set(RegisterName.EnergyToday, 0.0f);
-//        readings.set(RegisterName.TotalEnergy, 0.0f);
-//        readings.set(RegisterName.ChargeState, -1);
-//        readings.set(RegisterName.ConnectionState, 0);
-//        readings.set(RegisterName.SOC, 0);
-//        readings.set(RegisterName.Aux1, false);
-//        readings.set(RegisterName.Aux2, false);
-//        readings.broadcastReadings(MonitorApplication.getAppContext(), "MQTT", action);
-    }
-
     private void UnSubscribe() throws MqttException {
         if (mqttClient != null && mqttClient.isConnected()) {
             try {
-                UnSubscribeTo(String.format("%s/%s", "BatteryTester", "cmnd"));
-                UnSubscribeTo(String.format("%s/%s", "BatteryTester", "stat"));
+                UnSubscribeTo(String.format("%s/%s", "Battery", "cmnd"));
+                UnSubscribeTo(String.format("%s/%s", "Battery", "stat"));
             } catch (Exception e) {
                 Log.w(getClass().getName(), e.getMessage());
                 e.printStackTrace();
@@ -335,6 +283,7 @@ public class MQTTService extends Service {
             Log.d(getClass().getName(), "mqttWakeTimer.purge");
         }
     }
+
     private void UnSubscribeTo(String topic) throws MqttException {
         IMqttToken token = mqttClient.unsubscribe(topic);
         token.setActionCallback(new IMqttActionListener() {
@@ -342,6 +291,7 @@ public class MQTTService extends Service {
             public void onSuccess(IMqttToken iMqttToken) {
                 Log.d(getClass().getName(), " UnSubscribe Successful ");
             }
+
             @Override
             public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
                 Log.w(getClass().getName(), " UnSubscribe Failed " + iMqttToken.getException().getMessage());
@@ -352,6 +302,6 @@ public class MQTTService extends Service {
     private void BroadcastToast(String message) {
         Intent intent2 = new Intent(Constants.CA_BATTERY_TOAST);
         intent2.putExtra("message", message);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent2);
+        getApplicationContext().sendBroadcast(intent2);
     }
 }

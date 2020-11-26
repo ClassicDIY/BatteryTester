@@ -1,8 +1,22 @@
-package ca.skyetracker.battery;
-
-/**
- * Created by Me on 10/22/2017.
+/*
+ *  Created by ClassicDIY on 25/11/20 6:55 AM
+ *  Copyright (c) 2020 . All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
+
+package ca.skyetracker.battery;
 
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
@@ -12,7 +26,6 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,15 +43,24 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 
 import static ca.skyetracker.battery.State.Discharge;
 
-/**
- * Created by Me on 9/30/2015.
- */
 public class InfoTab extends Fragment {
     private CustomLineChart mChart;
     TextView textState, textEnergy, textTime, textVoltage, textCurrent, textResistance, textTemperature;
     Context context;
     int index;
     private int last_sQ;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getActivity().registerReceiver(mReadingsReceiver, new IntentFilter("ca.skyetracker.battery.cell"));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(mReadingsReceiver);
+    }
 
     @Nullable
     @Override
@@ -54,7 +76,6 @@ public class InfoTab extends Fragment {
         textState = (TextView) rootView.findViewById(R.id.textState);
         textEnergy = (TextView) rootView.findViewById(R.id.textEnergy);
         textTime = (TextView) rootView.findViewById(R.id.textTime);
-        LocalBroadcastManager.getInstance(context).registerReceiver(mReadingsReceiver, new IntentFilter("ca.skyetracker.battery.cell"));
         return rootView;
     }
 
@@ -64,33 +85,14 @@ public class InfoTab extends Fragment {
         initializeReadings(view, savedInstanceState);
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(mReadingsReceiver);
-        this.setRetainInstance(true);
-    }
-
-//    enum State {
-//        Standby,
-//        NoBatteryFound,
-//        MeasuringResistance,
-//        InitialCharge,
-//        Discharge,
-//        FinalCharge,
-//        ThermalShutdown,
-//        Complete
-//    };
-
-
     protected BroadcastReceiver mReadingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                Transfer cellTransfer = (Transfer)intent.getSerializableExtra("cell");
-                if (cellTransfer.sN == index) {
-                    switch (State.fromInt(cellTransfer.sS)) {
-                        case Initialized:
+                Readings readings = new Readings(intent.getExtras());
+                if (index == readings.getInt(ElementId.index)) {
+                    switch (State.valueOf(readings.GetString(ElementId.state))) {
+                        case Initialize:
                             textState.setText("Initialized");
                             break;
                         case Standby:
@@ -99,37 +101,46 @@ public class InfoTab extends Fragment {
                         case NoBatteryFound:
                             textState.setText("No Battery");
                             break;
-                        case MeasuringResistance:
+                        case Monitor:
+                            textState.setText("Monitor");
+                            break;
+                        case Stabilize:
+                            textState.setText("Stabilize");
+                            break;
+                        case InternalResistance:
                             textState.setText("Measuring Resistance");
                             break;
-                        case InitialCharge:
-                            textState.setText("Inital Charge");
+                        case FullCharge:
+                            textState.setText("Full Charge");
                             break;
                         case Discharge:
                             textState.setText("Discharging");
                             break;
-                        case FinalCharge:
-                            textState.setText("Final Charge");
+                        case StorageCharge:
+                            textState.setText("Storage Charge");
                             break;
                         case ThermalShutdown:
                             textState.setText("Thermal Shutdown");
+                            break;
+                        case CycleConplete:
+                            textState.setText("Cycle Conplete");
                             break;
                         case Complete:
                             textState.setText("Complete");
                             break;
                     }
-                    textVoltage.setText(String.format("%.2fV", cellTransfer.sV));
-                    textCurrent.setText(String.format("%dmA", cellTransfer.sI));
-                    textResistance.setText(String.format("%dmΩ", cellTransfer.sR));
-                    textTemperature.setText(String.format("%.1f C", cellTransfer.sT));
-                    textEnergy.setText(String.format("%dmAh", cellTransfer.sQ));
-                    int minutes = cellTransfer.sE / 60;
-                    int seconds = cellTransfer.sE % 60;
+                    textVoltage.setText(String.format("%.2fV", ((float) readings.getInt(ElementId.voltage))/1000));
+                    textCurrent.setText(String.format("%dmA", readings.getInt(ElementId.current)));
+                    textResistance.setText(String.format("%dmΩ", readings.getInt(ElementId.internalResistance)));
+                    textTemperature.setText(String.format("%2.1f C", (readings.getInt(ElementId.temperature))/10.0));
+                    textEnergy.setText(String.format("%dmAh", readings.getInt(ElementId.energy)));
+                    int minutes = readings.getInt(ElementId.duration) / 60;
+                    int seconds = readings.getInt(ElementId.duration) % 60;
                     textTime.setText(String.format("%s:%s m:s", minutes, seconds));
-                    if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
-                        last_sQ = cellTransfer.sQ;
-                        addEntry(cellTransfer.sV, cellTransfer.sQ);
-                    }
+//                    if (State.fromInt(cellTransfer.sS) == Discharge && last_sQ != cellTransfer.sQ) {
+//                        last_sQ = cellTransfer.sQ;
+//                        addEntry(cellTransfer.sV, cellTransfer.sQ);
+//                    }
                 }
             }
             catch (Exception ex) {

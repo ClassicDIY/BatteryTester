@@ -25,13 +25,14 @@ namespace BatteryTester
 		void Setup(ThreadController *controller);
 		void Perform(Operation op);
 		void setState(State state);
+		void setTesterNumber(int n);
 		void run();
 		Battery *pBattery() { return _pBattery; }
 
 	private:
 		void SetChargeCurrent();
 		void MQTTMonitor();
-
+		uint8_t _testerIndex;
 		StaticJsonDocument<MaxMQTTPayload> _doc;
 		uint8_t _batteryPosition; // 1 or 2;
 		uint8_t _tp4056Enable;

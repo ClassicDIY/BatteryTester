@@ -42,6 +42,7 @@ namespace BatteryTester
 
 	enum Id
 	{
+		index,
 		state,
 		energy,
 		maxTemperature,
@@ -52,7 +53,7 @@ namespace BatteryTester
 		temperature,
 		internalResistance
 	};
-	static const char * const Elements[] = {"state", "energy", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
+	static const char * const Elements[] = {"index", "state", "energy", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
 
 	enum Subtopic
 	{

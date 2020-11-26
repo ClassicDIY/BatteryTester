@@ -379,7 +379,6 @@ namespace BatteryTester
 		{
 			char buf[MaxMQTTTopic];
 			sprintf(buf, "%s/stat/%s_%d/%s", _mqttRootTopic, _mqttTesterNumber, pos, subtopic);
-
 			logd("publish %s|%s", buf, value);
 			_mqttClient.publish(buf, 0, retained, value);
 		}

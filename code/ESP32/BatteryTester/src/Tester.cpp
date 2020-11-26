@@ -95,7 +95,12 @@ namespace BatteryTester
 		}
 		return Standby;
 	}
-	
+
+	void Tester::setTesterNumber(int n)
+	{
+		_testerIndex = n - 1; // origin 0
+	}
+
 	void Tester::setState(State state)
 	{
 		if (_state != state)
@@ -212,18 +217,19 @@ namespace BatteryTester
 		_modulo = ++_modulo % 10;
 		if (_modulo == 0)
 		{
-			float temp = _pBattery->Temperature();
-			if (temp < 1000) // skip bad MCP9808 readings?
-			{
+			uint16_t temp = _pBattery->Temperature();
+			// if (temp < 1000) // skip bad MCP9808 readings?
+			// {
+				_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 				uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
 				_doc[Elements[Id::state]] = States[_state];
 				_doc[Elements[Id::voltage]] = _pBattery->Voltage();
 				_doc[Elements[Id::current]] = current;
-				_doc[Elements[Id::temperature]] = temp / 10;
+				_doc[Elements[Id::temperature]] = temp;
 				String s;
 				serializeJson(_doc, s);
 				_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], s.c_str(), false);
-			}
+			// }
 		}
 	}
 
@@ -263,6 +269,7 @@ namespace BatteryTester
 			MQTTMonitor();
 			if (t > _config.getStabilizeDuration() * 1000)
 			{
+				_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 				_doc[Elements[Id::state]] = States[_state];
 				_doc[Elements[Id::voltage]] = _pBattery->Voltage();
 				_doc[Elements[Id::maxTemperature]] = _MaxTemperature;
@@ -285,6 +292,7 @@ namespace BatteryTester
 				delay(500);
 				if (_pBattery->CheckForBattery())
 				{
+					_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 					_doc[Elements[Id::state]] = States[_state];
 					_doc[Elements[Id::energy]] = _mAs / 3600;
 					_doc[Elements[Id::maxTemperature]] = _MaxTemperature;
@@ -324,6 +332,7 @@ namespace BatteryTester
 				_internalResistance /= (iMax);
 				logd("Battery(%d): InternalResistance  %d", _batteryPosition, _internalResistance);
 				logd("Battery(%d): voc %d, vLoad %d, iMax %d", _batteryPosition, voc, vLoad, iMax);
+				_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 				_doc[Elements[Id::state]] = States[_state];
 				_doc[Elements[Id::internalResistance]] = _internalResistance;
 				_doc[Elements[Id::maxTemperature]] = _MaxTemperature;
@@ -361,6 +370,7 @@ namespace BatteryTester
 				DischargeLed_Off();
 				if (_pBattery->CheckForBattery())
 				{
+					_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 					_doc[Elements[Id::state]] = States[_state];
 					_doc[Elements[Id::energy]] = _mAs / 3600;
 					_doc[Elements[Id::maxTemperature]] = _MaxTemperature;
@@ -380,6 +390,7 @@ namespace BatteryTester
 			if (_pBattery->Voltage() >= _config.getStorageVoltage())
 			{
 				unsigned long t = millis() - _timeStamp;
+				_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 				_doc[Elements[Id::state]] = States[_state];
 				_doc[Elements[Id::voltage]] = _pBattery->Voltage();
 				_doc[Elements[Id::maxTemperature]] = _MaxTemperature;
@@ -397,6 +408,7 @@ namespace BatteryTester
 			if (_cycleCount > 0)
 			{
 				unsigned long t = millis() - _timeStamp;
+				_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 				_doc[Elements[Id::state]] = States[_state];
 				_doc[Elements[Id::voltage]] = _pBattery->Voltage();
 				_doc[Elements[Id::cycle]] = _cycleCount;
@@ -427,6 +439,7 @@ namespace BatteryTester
 			{
 				logw("Battery(%d): ThermalShutdown at %d", _batteryPosition, temp);
 				setState(ThermalShutdown);
+				_doc[Elements[Id::index]] = _testerIndex + _batteryPosition; // add battery position
 				_doc[Elements[Id::state]] = States[_state];
 				_doc[Elements[Id::voltage]] = _pBattery->Voltage();
 				_doc[Elements[Id::maxTemperature]] = _MaxTemperature;

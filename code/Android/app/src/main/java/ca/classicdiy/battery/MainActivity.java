@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 Intent commandIntent = new Intent().setAction(Constants.COMMAND_SUBTOPIC);
                 commandIntent.putExtra("operation", currentOperation.name());
-                commandIntent.setIdentifier("operation");
+                commandIntent.setIdentifier("publish");
                 sendBroadcast(commandIntent);
                 return true;
             }

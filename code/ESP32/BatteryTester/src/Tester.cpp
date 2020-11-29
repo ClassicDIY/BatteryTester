@@ -12,6 +12,7 @@ namespace BatteryTester
 	State StorageSequence[4]{Discharge, Stabilize, StorageCharge, Standby};
 	State InternalResistanceSequence[2]{InternalResistance, Standby};
 	State DischargeSequence[2]{Discharge, Standby};
+	State MonitorSequence[1]{Monitor};
 
 	Tester::Tester(uint8_t batteryPosition, uint8_t highBatPin, uint8_t shuntPin, uint8_t gatePin, uint8_t tp4056Prog,
 				   uint8_t tp4056Enable, uint8_t i2cAddress, uint8_t load10mw, uint8_t tp4056Standby, uint8_t chargeCurrent4k, uint8_t chargeCurrent2k, uint8_t dischargeLed)
@@ -77,7 +78,9 @@ namespace BatteryTester
 		case DischargeOperation:
 			_currentOperation = DischargeSequence;
 			break;
-		case MonitoreOperation:
+		case MonitorOperation:
+			_currentOperation = MonitorSequence;
+			break;
 		default:
 			return;
 		}
@@ -240,6 +243,10 @@ namespace BatteryTester
 		switch (_state)
 		{
 		case Monitor:
+		{
+			MQTTMonitor();
+		}
+		break;
 		case ThermalShutdown:
 		{
 			float temp = _pBattery->Temperature();

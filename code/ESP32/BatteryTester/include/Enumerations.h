@@ -29,7 +29,7 @@ namespace BatteryTester
 
 	enum Operation
 	{
-		MonitoreOperation,
+		MonitorOperation,
 		TestCycleOperation,
 		ChargeOperation,
 		TestAndStoreOperation,

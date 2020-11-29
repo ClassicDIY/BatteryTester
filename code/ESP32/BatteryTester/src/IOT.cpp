@@ -112,10 +112,10 @@ namespace BatteryTester
 			logd("Payload: %s", buf);
 			if (strcmp(subtopic, Subtopics[Subtopic::operation]) == 0) // mode of operation
 			{
-				Operation op = MonitoreOperation;
-				if (strncmp(payload, Operations[MonitoreOperation], len) == 0)
+				Operation op = MonitorOperation;
+				if (strncmp(payload, Operations[MonitorOperation], len) == 0)
 				{
-					op = TestCycleOperation;
+					op = MonitorOperation;
 				}
 				else if (strncmp(payload, Operations[TestCycleOperation], len) == 0)
 				{

@@ -98,7 +98,7 @@ public class MQTTService extends Service {
         public void onReceive(Context context, Intent intent) {
         if (mqttClient != null && mqttClient.isConnected()) {
             try {
-                if ("operation".equals(intent.getIdentifier())) {
+                if ("publish".equals(intent.getIdentifier())) {
                     mqttClient.publish(String.format("%s/operation", commandTopic), intent.getStringExtra("operation").getBytes(), 0, false);
                 }
             } catch (MqttException e) {
@@ -262,29 +262,40 @@ public class MQTTService extends Service {
                     Gson gson = gsonBuilder.create();
                     String[] elements = topic.split("/");
                     Log.d(getClass().getName(), "MQTT messageArrived: " + topic + "|" + str);
+                    Intent intent = new Intent();
                     if (topic.startsWith(statusTopic)) {
+                        intent.setAction(Constants.STATUS_SUBTOPIC);
                         if (topic.endsWith("monitor")) {
                             Bundle b = gson.fromJson(str, Bundle.class);
                             b.putBundle("monitor", gson.fromJson(str, Bundle.class));
-                            BroadcastMessage(b, Constants.STATUS_SUBTOPIC);
+                            intent.putExtras(b);
+                            intent.setIdentifier("monitor");
+                            sendBroadcast(intent);
                         }
                         else if (topic.endsWith("result")) {
                             Bundle b = gson.fromJson(str, Bundle.class);
                             b.putBundle("result", gson.fromJson(str, Bundle.class));
-                            BroadcastMessage(b, Constants.STATUS_SUBTOPIC);
+                            intent.putExtras(b);
+                            intent.setIdentifier("result");
+                            sendBroadcast(intent);
                         }
                         else if (topic.endsWith("mode")) {
                             Bundle b = new Bundle();
                             b.putString("mode", str);
-                            BroadcastMessage(b, Constants.STATUS_SUBTOPIC);
+                            intent.putExtras(b);
+                            intent.setIdentifier("mode");
+                            sendBroadcast(intent);
                         }
 
                     }
                     else if (topic.startsWith(commandTopic)) {
+                        intent.setAction(Constants.COMMAND_SUBTOPIC);
                         if (topic.endsWith("operation")) {
                             Bundle b = new Bundle();
                             b.putString("operation", str);
-                            BroadcastMessage(b, Constants.COMMAND_SUBTOPIC);
+                            intent.putExtras(b);
+                            intent.setIdentifier("operation");
+                            sendBroadcast(intent);
                         }
                     }
 //                    else {

@@ -70,7 +70,15 @@ public class DashboardFragment extends ListFragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (isVisible()) {
-                Log.d(getClass().getName(), intent.getStringExtra("Mode"));
+                if ("monitor".equals(intent.getIdentifier())) {
+                    Bundle b = intent.getBundleExtra("monitor");
+                    Log.d(getClass().getName(), String.format("monitor - Battery(%d) %s: %d mV %d mA %2.1f °C",  b.getInt("index"), b.getString("state"), b.getInt("voltage"), b.getInt("current"), b.getInt("temperature")/10.0) );
+                }
+                if ("result".equals(intent.getIdentifier())) {
+                    Bundle b = intent.getBundleExtra("result");
+                    Log.d(getClass().getName(), String.format("result - Battery(%d) %s: %d mV %d mA %2.1f °C",  b.getInt("index"), b.getString("state"), b.getInt("voltage"), b.getInt("current"), b.getInt("temperature")/10.0) );
+
+                }
             }
         }
     };

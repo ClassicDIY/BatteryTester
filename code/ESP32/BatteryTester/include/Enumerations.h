@@ -29,7 +29,7 @@ namespace BatteryTester
 
 	enum Operation
 	{
-		NoOp,
+		MonitoreOperation,
 		TestCycleOperation,
 		ChargeOperation,
 		TestAndStoreOperation,
@@ -38,7 +38,7 @@ namespace BatteryTester
 		InternalResistanceOperation,
 		DischargeOperation,
 	};
-	static const char * const Operations[] = {"NoOp", "TestCycle", "Charge", "TestAndStore", "TestAndCharge", "Storage", "InternalResistance", "Discharge"};
+	static const char * const Operations[] = {"Monitor", "TestCycle", "Charge", "TestAndStore", "TestAndCharge", "Storage", "InternalResistance", "Discharge"};
 
 	enum Id
 	{
@@ -58,9 +58,10 @@ namespace BatteryTester
 	enum Subtopic
 	{
 		result,
+		operation,
 		mode,
 		monitor,
 		config
 	};
-	static const char * const Subtopics[] = {"result", "mode", "monitor", "config"};
+	static const char * const Subtopics[] = {"result", "operation", "mode", "monitor", "config"};
 }

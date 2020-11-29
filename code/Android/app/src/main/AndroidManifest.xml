@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ca.skyetracker.battery">
+    package="ca.classicdiy.battery">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -14,14 +14,21 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/battery"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Holo">
-        <activity android:name=".MainActivity">
+        android:theme="@style/Theme.Battery">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Battery.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <action android:name="ca.skyetracker.battery.cell" />
+                <action android:name="ca.classicdiy.battery.cell" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".Settings"
+            android:label="@string/action_settings"
+            android:parentActivityName=".MainActivity" />
         <service
             android:name=".MQTTService"
             android:exported="false" />

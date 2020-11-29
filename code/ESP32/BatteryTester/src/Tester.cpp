@@ -77,7 +77,7 @@ namespace BatteryTester
 		case DischargeOperation:
 			_currentOperation = DischargeSequence;
 			break;
-		case NoOp:
+		case MonitoreOperation:
 		default:
 			return;
 		}

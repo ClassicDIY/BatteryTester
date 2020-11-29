@@ -1,0 +1,37 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="@string/MQTT_header">
+
+        <EditTextPreference
+            app:key="MQTTHost"
+            app:title="@string/MQTTHostname"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="MQTTPort"
+            app:title="@string/MQTTPort"
+             app:defaultValue="1883"
+            app:useSimpleSummaryProvider="true"/>
+        <EditTextPreference
+            app:key="MQTTUser"
+            app:title="@string/MQTTUser"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="MQTTPassword"
+            app:title="@string/MQTTPassword"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="TesterGroup"
+            app:title="@string/MQTTGroup"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/App_header">
+
+        <SwitchPreferenceCompat
+            app:key="degrees"
+            app:title="@string/degrees" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

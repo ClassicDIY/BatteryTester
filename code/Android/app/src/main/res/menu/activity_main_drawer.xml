@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_home_black_24dp"
+            android:title="@string/MonitorMode" />
+        <item
+            android:id="@+id/nav_cycle"
+            android:icon="@drawable/ic_photo_library_black_24dp"
+            android:title="@string/CycleMode" />
+        <item
+            android:id="@+id/nav_charge"
+            android:icon="@drawable/ic_photo_library_black_24dp"
+            android:title="@string/ChargeMode" />
+        <item
+            android:id="@+id/nav_TestAndStore"
+            android:icon="@drawable/ic_local_movies_black_24dp"
+            android:title="@string/TestAndStoreMode" />
+        <item
+            android:id="@+id/nav_TestAndCharge"
+            android:icon="@drawable/ic_notifications_black_24dp"
+            android:title="@string/TestAndChargeMode" />
+        <item
+            android:id="@+id/nav_Storage"
+            android:icon="@drawable/ic_notifications_black_24dp"
+            android:title="@string/StorageMode" />
+        <item
+            android:id="@+id/nav_InternalResistance"
+            android:icon="@drawable/ic_notifications_black_24dp"
+            android:title="@string/InternalResistanceMode" />
+        <item
+            android:id="@+id/nav_Discharge"
+            android:icon="@drawable/ic_notifications_black_24dp"
+            android:title="@string/DischargeMode" />
+    </group>
+
+    <item android:title="Other">
+        <menu>
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@drawable/ic_settings_black_24dp"
+                android:title="@string/nav_settings" />
+            <item
+                android:id="@+id/nav_about_us"
+                android:title="@string/nav_about" />
+         </menu>
+    </item>
+</menu>

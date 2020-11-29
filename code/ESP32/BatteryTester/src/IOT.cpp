@@ -38,7 +38,7 @@ namespace BatteryTester
 	{
 		logd("Connected to MQTT. Session present: %d", sessionPresent);
 		char mqttCmndTopic[STR_LEN];
-		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic,  Subtopics[Subtopic::mode]);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::operation]);
 		uint16_t packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::config]);
@@ -110,52 +110,43 @@ namespace BatteryTester
 			strncpy(buf, payload, len);
 			buf[len] = 0;
 			logd("Payload: %s", buf);
-			if (strcmp(subtopic, Subtopics[Subtopic::mode]) == 0) // mode of operation
+			if (strcmp(subtopic, Subtopics[Subtopic::operation]) == 0) // mode of operation
 			{
-				if (strncmp(payload, States[State::Monitor], len) == 0)
+				Operation op = MonitoreOperation;
+				if (strncmp(payload, Operations[MonitoreOperation], len) == 0)
 				{
-					_tester1.setState(State::Monitor);
-					_tester2.setState(State::Monitor);
+					op = TestCycleOperation;
 				}
-				else if (strncmp(payload, States[State::Standby], len) == 0)
+				else if (strncmp(payload, Operations[TestCycleOperation], len) == 0)
 				{
-					_tester1.setState(State::Standby);
-					_tester2.setState(State::Standby);
+					op = TestCycleOperation;
 				}
-				else
+				else if (strncmp(payload, Operations[ChargeOperation], len) == 0)
 				{
-					Operation op = NoOp;
-					if (strncmp(payload, Operations[TestCycleOperation], len) == 0)
-					{
-						op = TestCycleOperation;
-					}
-					else if (strncmp(payload, Operations[ChargeOperation], len) == 0)
-					{
-						op = ChargeOperation;
-					}
-					else if (strncmp(payload, Operations[TestAndStoreOperation], len) == 0)
-					{
-						op = TestAndStoreOperation;
-					}
-					else if (strncmp(payload, Operations[TestAndChargeOperation], len) == 0)
-					{
-						op = TestAndChargeOperation;
-					}
-					else if (strncmp(payload, Operations[StorageOperation], len) == 0)
-					{
-						op = StorageOperation;
-					}
-					else if (strncmp(payload, Operations[InternalResistanceOperation], len) == 0)
-					{
-						op = InternalResistanceOperation;
-					}
-					else if (strncmp(payload, Operations[DischargeOperation], len) == 0)
-					{
-						op = DischargeOperation;
-					}
-					_tester1.Perform(op);
-					_tester2.Perform(op);
+					op = ChargeOperation;
 				}
+				else if (strncmp(payload, Operations[TestAndStoreOperation], len) == 0)
+				{
+					op = TestAndStoreOperation;
+				}
+				else if (strncmp(payload, Operations[TestAndChargeOperation], len) == 0)
+				{
+					op = TestAndChargeOperation;
+				}
+				else if (strncmp(payload, Operations[StorageOperation], len) == 0)
+				{
+					op = StorageOperation;
+				}
+				else if (strncmp(payload, Operations[InternalResistanceOperation], len) == 0)
+				{
+					op = InternalResistanceOperation;
+				}
+				else if (strncmp(payload, Operations[DischargeOperation], len) == 0)
+				{
+					op = DischargeOperation;
+				}
+				_tester1.Perform(op);
+				_tester2.Perform(op);
 			}
 			else if (strcmp(subtopic, Subtopics[Subtopic::config]) == 0)
 			{

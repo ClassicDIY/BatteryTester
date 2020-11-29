@@ -1,7 +1,36 @@
 <resources>
     <string name="app_name">Battery</string>
-    <string name="One">Cell 1</string>
-    <string name="Two">Cell 2</string>
-    <string name="Three">Cell 3</string>
-    <string name="Four">Cell 4</string>
+    <!-- Settings Activity Title -->
+    <string name="action_settings">Settings</string>
+    <string name="nav_header_title">Battery Tester</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <!-- Preference Titles -->
+    <string name="MQTT_header">MQTT Broker</string>
+    <string name="MQTTHostname">Hostname</string>
+    <string name="MQTTPort">Port</string>
+    <string name="MQTTUser">User</string>
+    <string name="MQTTPassword">Password</string>
+    <string name="MQTTGroup">Tester Group</string>
+    <string name="App_header">Preferences</string>
+    <string name="degrees">Fahrenheit</string>
+
+    <string name="openDrawer">openDrawer</string>
+    <string name="closeDrawer">closeDrawer</string>
+
+    <!-- Navigation Drawer menu labels -->
+    <string name="MonitorMode">Monitor</string>
+    <string name="CycleMode">Charge-Discharge Cycle</string>
+    <string name="ChargeMode">Charge</string>
+    <string name="TestAndStoreMode">Test and Store</string>
+    <string name="TestAndChargeMode">Test and Charge</string>
+    <string name="StorageMode">Storage</string>
+    <string name="InternalResistanceMode">Internal Resistance</string>
+    <string name="DischargeMode">Discharge</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_about">About</string>
+
+    <!--Bottom view menu labels -->
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
 </resources>

@@ -1,12 +1,18 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 30
+
     defaultConfig {
-        applicationId "ca.skyetracker.battery"
-        minSdkVersion 15
-        targetSdkVersion 28
+        applicationId "ca.classicdiy.battery"
+        minSdkVersion 29
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
         release {
@@ -19,31 +25,28 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.preference:preference:1.1.1'
     implementation 'androidx.lifecycle:lifecycle-process:2.2.0'
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('androidx.test.espresso:espresso-core:3.1.0', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-
-    implementation 'androidx.core:core:1.0.0'
-    implementation 'androidx.appcompat:appcompat:1.0.0'
-    implementation 'androidx.legacy:legacy-support-v13:1.0.0'
-    implementation 'joda-time:joda-time:2.6'
-    implementation 'com.github.PhilJay:MPAndroidChart:v2.2.4'
-    implementation 'com.google.code.gson:gson:2.3.1'
-    implementation files('libs/org.eclipse.paho.android.service-1.1.1.jar')
-    implementation files('libs/org.eclipse.paho.client.mqttv3-1.1.1.jar')
-}
-
-repositories{
-    flatDir{
-        dirs 'libs'
-    }
-    maven { url "https://jitpack.io" }
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.navigation:navigation-fragment:2.3.1'
+    implementation 'androidx.navigation:navigation-ui:2.3.1'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation  'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+    implementation  'org.eclipse.paho:org.eclipse.paho.android.service:1.0.2'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }

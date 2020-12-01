@@ -44,7 +44,9 @@ namespace BatteryTester
 		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::config]);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
-		logd("MQTT subscribe, QoS 1, packetId: %d", packetIdSub);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::ping]);
+		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		_mqttClient.publish(_willTopic, 0, false, "Online");
 		_tester1.setState(Standby);
 		_tester2.setState(Standby);
@@ -72,6 +74,7 @@ namespace BatteryTester
 		{
 		case SYSTEM_EVENT_STA_GOT_IP:
 			logd("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
+			_JSdoc.clear();
 			_JSdoc["IP"] = WiFi.localIP().toString().c_str();
 			_JSdoc["ApPassword"] = TAG;
 			serializeJson(_JSdoc, s);
@@ -110,7 +113,17 @@ namespace BatteryTester
 			strncpy(buf, payload, len);
 			buf[len] = 0;
 			logd("Payload: %s", buf);
-			if (strcmp(subtopic, Subtopics[Subtopic::operation]) == 0) // mode of operation
+			if (strcmp(subtopic, Subtopics[Subtopic::ping]) == 0) // ping telemetry response with IP address
+			{
+				char buf[MaxMQTTTopic];
+				String s;
+				sprintf(buf, "%s/tele/%s/ping", _mqttRootTopic, _mqttTesterNumber);
+				_JSdoc.clear();
+				_JSdoc["IP"] = WiFi.localIP().toString().c_str();
+				serializeJson(_JSdoc, s);
+				_mqttClient.publish(buf, 0, true, s.c_str());
+			}
+			else if (strcmp(subtopic, Subtopics[Subtopic::operation]) == 0) // mode of operation
 			{
 				Operation op = MonitorOperation;
 				if (strncmp(payload, Operations[MonitorOperation], len) == 0)
@@ -156,6 +169,7 @@ namespace BatteryTester
 				}
 				else // set configuration
 				{
+					_JSdoc.clear();
 					DeserializationError error = deserializeJson(_JSdoc, payload, len);
 					if (!error)
 					{
@@ -325,6 +339,7 @@ namespace BatteryTester
 			{
 				String s = Serial.readStringUntil('}');
 				s += "}";
+				_JSdoc.clear();
 				DeserializationError err = deserializeJson(_JSdoc, s);
 				if (err)
 				{

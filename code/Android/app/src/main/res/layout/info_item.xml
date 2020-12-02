@@ -24,33 +24,5 @@
     android:paddingLeft="20sp"
     android:weightSum="100">
 
-    <TextView
-        android:id="@+id/info_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="40"
-        android:gravity="right"
-        android:inputType="none"
-        android:labelFor="@+id/info_value"
-        android:shadowColor="@color/material_blue_grey_800"
-        android:shadowDx="1"
-        android:shadowDy="1"
-        android:shadowRadius="1"
-        android:singleLine="true"
-        android:textColor="@color/accent_material_dark"
-        android:textStyle="italic" />
 
-    <TextView
-        android:id="@+id/info_value"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="60"
-        android:inputType="none"
-        android:shadowColor="@color/material_blue_grey_800"
-        android:shadowDx="1"
-        android:shadowDy="1"
-        android:shadowRadius="1"
-        android:singleLine="true"
-        android:textColor="@color/accent_material_dark"
-        android:paddingLeft="10sp" />
 </LinearLayout>

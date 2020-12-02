@@ -251,7 +251,8 @@ public class MQTTService extends Service {
 
             @Override
             public void connectionLost(Throwable throwable) {
-                Log.w(getClass().getName(), "connectionLost ");
+
+                Log.w(getClass().getName(), String.format("Lost MQTT connection: %s", throwable.getMessage()));
             }
 
             @Override

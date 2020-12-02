@@ -26,7 +26,7 @@ namespace BatteryTester
         IOT();
         void Init();
         void Run();
-        void publish(uint8_t pos, const char *subtopic, const char *value, boolean retained = false);
+        void publish(uint8_t pos, const char *subtopic, StaticJsonDocument<MaxMQTTPayload> *doc, boolean retained = false);
 
     private:
         void SetupWifi(const char *ssid, const char *pw);

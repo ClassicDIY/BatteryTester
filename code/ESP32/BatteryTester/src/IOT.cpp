@@ -379,14 +379,17 @@ namespace BatteryTester
 		esp_restart(); // force reboot
 	}
 
-	void IOT::publish(uint8_t pos, const char *subtopic, const char *value, boolean retained)
+	void IOT::publish(uint8_t pos, const char *subtopic, StaticJsonDocument<MaxMQTTPayload> *doc, boolean retained)
 	{
 		if (_mqttClient.connected())
 		{
 			char buf[MaxMQTTTopic];
 			sprintf(buf, "%s/stat/%s_%d/%s", _mqttRootTopic, _mqttTesterNumber, pos, subtopic);
-			logd("publish %s|%s", buf, value);
-			_mqttClient.publish(buf, 0, retained, value);
+			(*doc)[Elements[Id::index]] = _mqttTesterNumber + pos - 1; // add battery index (origin 0)
+			String s;
+			serializeJson(*doc, s);
+			logd("publish %s|%s", buf, s);
+			_mqttClient.publish(buf, 0, retained, s.c_str());
 		}
 	}
 

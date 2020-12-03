@@ -384,11 +384,13 @@ namespace BatteryTester
 		if (_mqttClient.connected())
 		{
 			char buf[MaxMQTTTopic];
-			sprintf(buf, "%s/stat/%s_%d/%s", _mqttRootTopic, _mqttTesterNumber, pos, subtopic);
-			(*doc)[Elements[Id::index]] = _mqttTesterNumber + pos - 1; // add battery index (origin 0)
+			sprintf(buf, "%s/stat/%s/%s", _mqttRootTopic, _mqttTesterNumber, subtopic);
+			int testerIndex = (atoi(_mqttTesterNumber) - 1) * 2; // 2 cells per tester * testerNumber origin 0
+			(*doc)[Elements[Id::index]] = testerIndex + pos; // cell index (origin 0) out of all testers
+			(*doc)[Elements[Id::position]] = pos; // battery position (0 or 1) in this tester
 			String s;
 			serializeJson(*doc, s);
-			logd("publish %s|%s", buf, s);
+			logd("publish %s|%s", buf, s.c_str());
 			_mqttClient.publish(buf, 0, retained, s.c_str());
 		}
 	}

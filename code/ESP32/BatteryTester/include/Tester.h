@@ -39,7 +39,7 @@ namespace BatteryTester
 		uint8_t _dischargeLed;
 		uint8_t _dutyCycle;
 		boolean _blinker;
-		int _modulo;
+		int _modulo = -1;
 		uint32_t _mAs = 0; //mA seconds
 		unsigned long _timeStamp = 0;
 		uint16_t _MaxTemperature; // in �C * 10

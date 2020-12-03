@@ -40,9 +40,11 @@ namespace BatteryTester
 	};
 	static const char * const Operations[] = {"Monitor", "TestCycle", "Charge", "TestAndStore", "TestAndCharge", "Storage", "InternalResistance", "Discharge"};
 
+	// json key string to enum
 	enum Id
 	{
 		index,
+		position,
 		state,
 		energy,
 		maxTemperature,
@@ -53,7 +55,7 @@ namespace BatteryTester
 		temperature,
 		internalResistance
 	};
-	static const char * const Elements[] = {"index", "state", "energy", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
+	static const char * const Elements[] = {"index", "position", "state", "energy", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
 
 	enum Subtopic
 	{

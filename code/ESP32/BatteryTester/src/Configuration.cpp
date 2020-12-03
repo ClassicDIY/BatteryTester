@@ -150,7 +150,7 @@ namespace BatteryTester
 		while ((millis() - start) <= 100)
 		{
 			time(&now);
-			if (now > 1573996930)
+			if (now > 1573996930) // manufacture date
 			{
 				return now;
 			}

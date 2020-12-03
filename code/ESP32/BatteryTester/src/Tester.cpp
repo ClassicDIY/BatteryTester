@@ -214,7 +214,8 @@ namespace BatteryTester
 
 	void Tester::MQTTMonitor()
 	{
-		_modulo = ++_modulo % 10;
+		_modulo++;
+		_modulo %= 10;
 		if (_modulo == 0)
 		{
 			uint16_t temp = _pBattery->Temperature();
@@ -234,7 +235,28 @@ namespace BatteryTester
 	void Tester::run()
 	{
 		runned();
-
+		if (_pBattery->CheckForBattery() == false)
+		{
+			setState(NoBatteryFound);
+		}
+		uint16_t temp = _pBattery->Temperature();
+		if (temp < 1000) // skip bad MCP9808 readings?
+		{
+			if (temp > _MaxTemperature)
+			{
+				_MaxTemperature = temp;
+			}
+			if (temp >= _config.getThermalShutdownTemperature())
+			{
+				logw("Battery(%d): ThermalShutdown at %d", _batteryPosition, temp);
+				setState(ThermalShutdown);
+				StaticJsonDocument<MaxMQTTPayload> doc;
+				doc[Elements[Id::state]] = States[_state];
+				doc[Elements[Id::voltage]] = _pBattery->Voltage();
+				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
+				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
+			}
+		}
 		switch (_state)
 		{
 		case Monitor:
@@ -413,28 +435,6 @@ namespace BatteryTester
 			setState(Standby);
 		}
 		break;
-		}
-		if (_pBattery->CheckForBattery() == false)
-		{
-			setState(NoBatteryFound);
-		}
-		uint16_t temp = _pBattery->Temperature();
-		if (temp < 1000) // skip bad MCP9808 readings?
-		{
-			if (temp > _MaxTemperature)
-			{
-				_MaxTemperature = temp;
-			}
-			if (temp >= _config.getThermalShutdownTemperature())
-			{
-				logw("Battery(%d): ThermalShutdown at %d", _batteryPosition, temp);
-				setState(ThermalShutdown);
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::voltage]] = _pBattery->Voltage();
-				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
-			}
 		}
 	}
 

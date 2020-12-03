@@ -33,6 +33,7 @@ enum Operation
 
 enum ElementId {
     index,
+    cell,
     state,
     energy,
     maxTemperature,

@@ -387,7 +387,7 @@ namespace BatteryTester
 			sprintf(buf, "%s/stat/%s/%s", _mqttRootTopic, _mqttTesterNumber, subtopic);
 			int testerIndex = (atoi(_mqttTesterNumber) - 1) * 2; // 2 cells per tester * testerNumber origin 0
 			(*doc)[Elements[Id::index]] = testerIndex + pos; // cell index (origin 0) out of all testers
-			(*doc)[Elements[Id::position]] = pos; // battery position (0 or 1) in this tester
+			(*doc)[Elements[Id::cell]] = pos; // battery cell position (0 or 1) in this tester
 			String s;
 			serializeJson(*doc, s);
 			logd("publish %s|%s", buf, s.c_str());

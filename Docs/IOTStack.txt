@@ -1,0 +1,82 @@
+Raspberry Pi setup using IOTStack
+https://github.com/SensorsIot/IOTstack
+
+Setup the Raspberry Pi:
+
+SD card: Samsung 64G EVo select 3 micro SD card
+
+Download and install the Raspberry Pi imager: https://www.raspberrypi.org/software/
+Select Raspberry Pi OS Desktop (32bit)
+Select the SD card
+Write to SD card
+
+For headless setup, SSH can be enabled by placing a file named ssh onto the boot partition of the SD card
+
+Find raspberry pi's IP address
+reserve address on router: 192.168.86.25
+
+ssh pi@192.168.86.25
+
+* Windows 10: delete know_host entry in <user>\.ssh\known_hosts for 192.168.86.25 if Host key verification failed
+
+change the default password using: passwd
+
+Using powershel on Windows 10, execute: cat ~/.ssh/id_rsa.pub | ssh pi@192.168.86.25 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
+
+sudo reboot 
+login with ssh pi@192.168.86.25
+
+sudo raspi-config
+set locale to en_CA.UTF-8
+
+sudo apt-get update
+sudo apt-get upgrade
+
+Setup IOTstack:
+
+sudo apt install -y git curl
+cd
+git clone https://github.com/SensorsIot/IOTstack.git IOTstack
+
+cd ~/IOTstack
+./menu.sh
+Select "Install Docker"
+
+Reboot Pi
+
+cd ~/IOTstack
+./menu.sh
+Select "Build Stack"
+
+Select: Portainer-ce Node-RED InfluxDB Grafana Eclipse-Mosquito Telegraph MariaDB
+
+docker-compose up -d
+
+Setup Portainer-ce:
+
+#yourip:9002/
+192.168.86.25:9002
+
+Create "admin" User & Password
+Select: "Docker (Manage the local Docker environment)"
+Connect
+
+Setup Mosquito: 
+
+docker exec -it mosquitto sh
+mosquitto_passwd -c /mosquitto/pwfile/pwfile Argon 
+pw
+re-enter pw
+exit
+
+Connect to MQTT broker using MQTTfx
+
+
+DuckDNS:
+create an account on https://www.duckdns.org/
+
+account: graham22@github
+token: 335f3562-1f32-46c9-a532-d0748d55a462 
+http://classicDIY.duckdns.org
+
+ 

@@ -12,6 +12,10 @@
 
 Follow the development progress on the <a href="https://github.com/ClassicDIY/BatteryTester/wiki">Battery Tester wiki</a>
 
+![](https://github.com/ClassicDIY/BatteryTester/blob/master/Pictures/BlockDiagram.PNG)
+
+
+
 
 
 

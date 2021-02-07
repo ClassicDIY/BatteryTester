@@ -476,8 +476,26 @@ namespace BatteryTester
 	void Tester::SetChargeCurrent()
 	{
 		uint8_t cc = _config.getChargeCurrent(); // 0:100 mA 1:400 mA 2: 700mA 3:1000 mA
-		digitalWrite(_chargeCurrent4k, (cc & 0x01) ? LOW : HIGH);
-		digitalWrite(_chargeCurrent2k, (cc & 0x02) ? LOW : HIGH);
+		// digitalWrite(_chargeCurrent4k, (cc & 0x01) ? LOW : HIGH);
+		// digitalWrite(_chargeCurrent2k, (cc & 0x02) ? LOW : HIGH);
+		if (cc & 0x01)
+		{
+			pinMode(_chargeCurrent4k, OUTPUT);
+			digitalWrite(_chargeCurrent4k, LOW);
+		}
+		else
+		{
+			pinMode(_chargeCurrent4k, INPUT);
+		}
+		if (cc & 0x02)
+		{
+			pinMode(_chargeCurrent2k, OUTPUT);
+			digitalWrite(_chargeCurrent2k, LOW);
+		}
+		else
+		{
+			pinMode(_chargeCurrent2k, INPUT);
+		}
 	}
 
 } // namespace BatteryTester

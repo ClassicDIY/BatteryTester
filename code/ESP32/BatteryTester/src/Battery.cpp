@@ -3,19 +3,18 @@
 
 namespace BatteryTester
 {
-	Battery::Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress, uint8_t lowLoad)
+	Battery::Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056ProgPin, uint8_t i2cAddress, uint8_t lowLoad)
 	{
-		_highBatPin = highBatPin;
-		_shuntPin = shuntPin;
-		_tp4056Prog = tp4056Prog;
 		_lowLoad = lowLoad;
-		_i2cAddress = i2cAddress;
-		pinMode(_tp4056Prog, INPUT);
-		pinMode(_highBatPin, INPUT_PULLUP);
-		pinMode(_shuntPin, INPUT);
+		pinMode(tp4056ProgPin, INPUT);
+		pinMode(highBatPin, INPUT_PULLUP);
+		pinMode(shuntPin, INPUT);
 		pinMode(_lowLoad, OUTPUT_OPEN_DRAIN);
 		LowLoad_Off();
-		_tempsensor.begin(_i2cAddress);
+		_tempsensor.begin(i2cAddress);
+		_highBat.attach(highBatPin);
+        _shunt.attach(shuntPin);
+        _tp4056Prog.attach(tp4056ProgPin);
 	}
 
 	Battery::~Battery()
@@ -48,18 +47,18 @@ namespace BatteryTester
 		return OpenVoltage() >= MinimumBatteryVoltageForDetection;
 	}
 
-	float Battery::Scale(uint32_t reading)
-	{
-		if (reading < 1 || reading > ADC_Resolution)
-		{
-			return 0;
-		}
-		// The constants used in this calculation are taken from
-		// https://github.com/G6EJD/ESP32-ADC-Accuracy-Improvement-function
-		// and improves the default ADC reading accuracy to within 1%.
-		float sensorReading = -0.000000000000016 * pow(reading, 4) + 0.000000000118171 * pow(reading, 3) - 0.000000301211691 * pow(reading, 2) + 0.001109019271794 * reading + 0.034143524634089;
-		return sensorReading;
-	}
+	// float Battery::Scale(uint32_t reading)
+	// {
+	// 	if (reading < 1 || reading > ADC_Resolution)
+	// 	{
+	// 		return 0;
+	// 	}
+	// 	// The constants used in this calculation are taken from
+	// 	// https://github.com/G6EJD/ESP32-ADC-Accuracy-Improvement-function
+	// 	// and improves the default ADC reading accuracy to within 1%.
+	// 	float sensorReading = -0.000000000000016 * pow(reading, 4) + 0.000000000118171 * pow(reading, 3) - 0.000000301211691 * pow(reading, 2) + 0.001109019271794 * reading + 0.034143524634089;
+	// 	return sensorReading;
+	// }
 
 	uint16_t Battery::OpenVoltage()
 	{
@@ -73,21 +72,24 @@ namespace BatteryTester
 	// in mV
 	uint16_t Battery::Voltage()
 	{
-		float f = Scale(_movingAverageBatteryVolt) * 25000 / 15; // 10k and 15k divider * 1000 mV
-		return f + 0.5;											 // round float by adding 0.5 before cast
+		// float f = Scale(_movingAverageBatteryVolt) * 25000 / 15; // 10k and 15k divider * 1000 mV
+		// return f + 0.5;											 // round float by adding 0.5 before cast
+		return _movingAverageBatteryVolt * 25 / 15;
 	}
 
 	uint16_t Battery::ShuntVoltage()
 	{
-		float f = Scale(_movingAverageShuntVolt) * 25000 / 15; // 10k and 15k divider * 1000 mV
-		return f + 0.5;										   // round float by adding 0.5 before cast
+		// float f = Scale(_movingAverageShuntVolt) * 25000 / 15; // 10k and 15k divider * 1000 mV
+		// return f + 0.5;										   // round float by adding 0.5 before cast
+		return _movingAverageShuntVolt * 25 / 15;
 	}
 
 	// TP4056 Prog pin (in mA)
 	int16_t Battery::ChargeCurrent()
 	{
-		float f = Scale(_movingAverageChargeCurrent) * 1000; //mA
-		return f + 0.5;										 // round float by adding 0.5 before cast
+		// float f = Scale(_movingAverageChargeCurrent) * 1000; //mA
+		// return f + 0.5;										 // round float by adding 0.5 before cast
+		return _movingAverageChargeCurrent;
 	}
 
 	// Shunt voltage delta / 1Ω (in mA)
@@ -117,15 +119,15 @@ namespace BatteryTester
 		{
 			// charge current
 			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent - _movingAverageChargeCurrent; // Remove previous sample from the sum
-			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent + analogRead(_tp4056Prog);	   // Replace it with the current sample
+			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent + _tp4056Prog.readMiliVolts();	   // Replace it with the current sample
 			_movingAverageChargeCurrent = _movingAverageSumChargeCurrent / AverageCount;				   // Recalculate moving average
 			//Battery volts
 			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt - _movingAverageBatteryVolt;
-			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + analogRead(_highBatPin);
+			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + _highBat.readMiliVolts();;
 			_movingAverageBatteryVolt = _movingAverageSumBatteryVolt / AverageCount;
 			// //Shunt volts
 			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt - _movingAverageShuntVolt;
-			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + analogRead(_shuntPin);
+			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + _shunt.readMiliVolts();;
 			_movingAverageShuntVolt = _movingAverageSumShuntVolt / AverageCount;
 		}
 	}

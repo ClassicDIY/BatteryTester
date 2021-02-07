@@ -1,5 +1,3 @@
-#define ESPVoltageRef 3300	 // ESP32 ref voltage in mV
-
 #define AverageCount 1000 //MMA modified moving average count
 #define MMASampleRate 2000 // mS
 #define MonitorRate 1000 // mS

@@ -3,6 +3,7 @@
 #include "Constants.h"
 #include "IOT.h"
 #include "Adafruit_MCP9808.h"
+#include "ESP32AnalogRead.h"
 
 extern BatteryTester::IOT _iot;
 
@@ -12,7 +13,7 @@ namespace BatteryTester
     class Battery : public Thread
     {
     public:
-        Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056Prog, uint8_t i2cAddress, uint8_t lowLoad);
+        Battery(uint8_t highBatPin, uint8_t shuntPin, uint8_t tp4056ProgPin, uint8_t i2cAddress, uint8_t lowLoad);
         ~Battery();
         void run();
         void Reset();
@@ -27,15 +28,14 @@ namespace BatteryTester
 
     private:
         Adafruit_MCP9808 _tempsensor = Adafruit_MCP9808();
-        float Scale(uint32_t v);
+        // float Scale(uint32_t v);
 		void LowLoad_Off();
 		void LowLoad_On();
         
-        uint8_t _highBatPin;
-        uint8_t _i2cAddress;
-        uint8_t _shuntPin;
         uint8_t _lowLoad;
-        uint8_t _tp4056Prog;
+        ESP32AnalogRead _highBat;
+        ESP32AnalogRead _shunt;
+        ESP32AnalogRead _tp4056Prog;
         uint32_t _AcsOffset; // ACS712 vout when no current
         uint32_t _movingAverageChargeCurrent;
         uint32_t _movingAverageSumChargeCurrent;

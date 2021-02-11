@@ -61,7 +61,7 @@ namespace BatteryTester
 				_lowCutoff = deserialWord(&(_buffer[0]));
 				_thermalShutdownTemperature = deserialWord(&(_buffer[2]));
 				_storageVoltage = deserialWord(&(_buffer[4]));
-				_lowCutoff = deserialWord(&(_buffer[6]));
+				_stabilizeDuration = deserialWord(&(_buffer[6]));
 				_chargeCurrent = deserialByte(&(_buffer[8]));
 				_chargeDischargeCycleCount = deserialByte(&(_buffer[9]));
 				

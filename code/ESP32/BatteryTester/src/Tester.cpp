@@ -105,7 +105,8 @@ namespace BatteryTester
 		{
 			logd("Battery(%d): SetState %s", _batteryPosition, States[state]);
 			_state = state;
-			_timeStamp = millis(); // state change time
+			_stateChangeTimeStamp = millis(); // state change time
+			_lastReadingTimeStamp = millis();
 			_mAs = 0;
 			_modulo = -1;
 			switch (state)
@@ -221,13 +222,13 @@ namespace BatteryTester
 			uint16_t temp = _pBattery->Temperature();
 			// if (temp < 1000) // skip bad MCP9808 readings?
 			// {
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::voltage]] = _pBattery->Voltage();
-				doc[Elements[Id::current]] = current;
-				doc[Elements[Id::temperature]] = temp;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
+			StaticJsonDocument<MaxMQTTPayload> doc;
+			uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
+			doc[Elements[Id::state]] = States[_state];
+			doc[Elements[Id::voltage]] = _pBattery->Voltage();
+			doc[Elements[Id::current]] = current;
+			doc[Elements[Id::temperature]] = temp;
+			_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
 			// }
 		}
 	}
@@ -289,7 +290,7 @@ namespace BatteryTester
 		break;
 		case Stabilize:
 		{
-			unsigned long t = millis() - _timeStamp;
+			unsigned long t = millis() - _stateChangeTimeStamp;
 			MQTTMonitor();
 			if (t > _config.getStabilizeDuration() * 1000)
 			{
@@ -305,8 +306,10 @@ namespace BatteryTester
 		break;
 		case FullCharge:
 		{
-			unsigned long t = millis() - _timeStamp;
-			_mAs += _pBattery->ChargeCurrent() * t / 1000;
+			uint16_t c = _pBattery->ChargeCurrent();
+			unsigned long sinceLastReading = millis() - _lastReadingTimeStamp;
+			_mAs += c * sinceLastReading / 1000;
+			_lastReadingTimeStamp = millis();
 			MQTTMonitor();
 			if (TP4056_OnStandby())
 			{
@@ -318,7 +321,7 @@ namespace BatteryTester
 					doc[Elements[Id::state]] = States[_state];
 					doc[Elements[Id::energy]] = _mAs / 3600;
 					doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-					doc[Elements[Id::duration]] = t / 1000;
+					doc[Elements[Id::duration]] = millis() - _stateChangeTimeStamp / 1000;
 					_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 					setState(NextState());
 				}
@@ -363,12 +366,10 @@ namespace BatteryTester
 		break;
 		case Discharge:
 		{
-			unsigned long t = millis() - _timeStamp;
 			MQTTMonitor();
 			if (_pBattery->Voltage() >= _config.getLowCutoff())
 			{
 				int32_t current = _pBattery->DischargeCurrent();
-				_mAs += current * t / 1000;
 				if (current > 550 && _dutyCycle > 0)
 				{
 					// --_dutyCycle;
@@ -381,6 +382,9 @@ namespace BatteryTester
 					_dutyCycle += 10;
 					Load_On();
 				}
+				unsigned long sinceLastReading = millis() - _lastReadingTimeStamp;
+				_mAs += _pBattery->DischargeCurrent() * sinceLastReading / 1000;
+				_lastReadingTimeStamp = millis();
 			}
 			else
 			{
@@ -392,9 +396,10 @@ namespace BatteryTester
 					doc[Elements[Id::state]] = States[_state];
 					doc[Elements[Id::energy]] = _mAs / 3600;
 					doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-					doc[Elements[Id::duration]] = t / 1000;
+					unsigned long duration = millis() - _stateChangeTimeStamp / 1000;
+					doc[Elements[Id::duration]] = duration;
 					_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
-					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, t / 1000, _mAs / 3600);
+					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, duration, _mAs / 3600);
 					setState(NextState());
 				}
 			}
@@ -405,7 +410,7 @@ namespace BatteryTester
 			MQTTMonitor();
 			if (_pBattery->Voltage() >= _config.getStorageVoltage())
 			{
-				unsigned long t = millis() - _timeStamp;
+				unsigned long t = millis() - _stateChangeTimeStamp;
 				StaticJsonDocument<MaxMQTTPayload> doc;
 				doc[Elements[Id::state]] = States[_state];
 				doc[Elements[Id::voltage]] = _pBattery->Voltage();
@@ -421,7 +426,7 @@ namespace BatteryTester
 			_cycleCount--;
 			if (_cycleCount > 0)
 			{
-				unsigned long t = millis() - _timeStamp;
+				unsigned long t = millis() - _stateChangeTimeStamp;
 				StaticJsonDocument<MaxMQTTPayload> doc;
 				doc[Elements[Id::state]] = States[_state];
 				doc[Elements[Id::voltage]] = _pBattery->Voltage();

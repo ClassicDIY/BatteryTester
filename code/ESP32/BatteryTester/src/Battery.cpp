@@ -13,8 +13,8 @@ namespace BatteryTester
 		LowLoad_Off();
 		_tempsensor.begin(i2cAddress);
 		_highBat.attach(highBatPin);
-        _shunt.attach(shuntPin);
-        _tp4056Prog.attach(tp4056ProgPin);
+		_shunt.attach(shuntPin);
+		_tp4056Prog.attach(tp4056ProgPin);
 	}
 
 	Battery::~Battery()
@@ -95,7 +95,10 @@ namespace BatteryTester
 	// Shunt voltage delta / 1Ω (in mA)
 	uint32_t Battery::DischargeCurrent()
 	{
-		return Voltage() - ShuntVoltage();
+		if (Voltage() > ShuntVoltage())
+			return Voltage() - ShuntVoltage();
+		else
+			return 0;
 	}
 
 	// °C * 10
@@ -119,15 +122,17 @@ namespace BatteryTester
 		{
 			// charge current
 			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent - _movingAverageChargeCurrent; // Remove previous sample from the sum
-			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent + _tp4056Prog.readMiliVolts();	   // Replace it with the current sample
+			_movingAverageSumChargeCurrent = _movingAverageSumChargeCurrent + _tp4056Prog.readMiliVolts(); // Replace it with the current sample
 			_movingAverageChargeCurrent = _movingAverageSumChargeCurrent / AverageCount;				   // Recalculate moving average
 			//Battery volts
 			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt - _movingAverageBatteryVolt;
-			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + _highBat.readMiliVolts();;
+			_movingAverageSumBatteryVolt = _movingAverageSumBatteryVolt + _highBat.readMiliVolts();
+			;
 			_movingAverageBatteryVolt = _movingAverageSumBatteryVolt / AverageCount;
 			// //Shunt volts
 			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt - _movingAverageShuntVolt;
-			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + _shunt.readMiliVolts();;
+			_movingAverageSumShuntVolt = _movingAverageSumShuntVolt + _shunt.readMiliVolts();
+			;
 			_movingAverageShuntVolt = _movingAverageSumShuntVolt / AverageCount;
 		}
 	}

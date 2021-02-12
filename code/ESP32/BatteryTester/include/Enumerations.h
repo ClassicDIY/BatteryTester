@@ -4,8 +4,8 @@ namespace BatteryTester
 {
 	enum State
 	{
-		Unspecified,
 		Initialize, 
+		Begin,
 		Standby, 
 		NoBatteryFound, 
 		Monitor,
@@ -16,10 +16,11 @@ namespace BatteryTester
 		StorageCharge, 
 		ThermalShutdown, 
 		CycleConplete,
-		Complete
+		Complete,
+		Unspecified
 	};
-	static const char * const States[] = {"Unspecified", "Initialize", "Standby"
-	, "NoBatteryFound", "Monitor", "Stabilize", "InternalResistance", "FullCharge", "Discharge", "StorageCharge", "ThermalShutdown", "CycleConplete", "Complete"};
+	static const char * const States[] = {"Initialize", "Begin", "Standby"
+	, "NoBatteryFound", "Monitor", "Stabilize", "InternalResistance", "FullCharge", "Discharge", "StorageCharge", "ThermalShutdown", "CycleConplete", "Complete", "Unspecified"};
 
 	enum TesterError
 	{
@@ -46,7 +47,7 @@ namespace BatteryTester
 		index,
 		cell,
 		state,
-		energy,
+		capacity,
 		maxTemperature,
 		duration,
 		voltage,
@@ -55,7 +56,7 @@ namespace BatteryTester
 		temperature,
 		internalResistance
 	};
-	static const char * const Elements[] = {"index", "cell", "state", "energy", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
+	static const char * const Elements[] = {"index", "cell", "state", "capacity", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
 
 	enum Subtopic
 	{
@@ -64,7 +65,8 @@ namespace BatteryTester
 		mode,
 		monitor,
 		config,
-		ping
+		ping,
+		outcome
 	};
-	static const char * const Subtopics[] = {"result", "operation", "mode", "monitor", "config", "ping"};
+	static const char * const Subtopics[] = {"result", "operation", "mode", "monitor", "config", "ping", "outcome"};
 }

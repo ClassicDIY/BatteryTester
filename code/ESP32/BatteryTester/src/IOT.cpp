@@ -1,6 +1,7 @@
 #include "IOT.h"
 #include <sys/time.h>
 #include <EEPROM.h>
+#include <IotWebConfESP32HTTPUpdateServer.h>
 #include "time.h"
 #include "Log.h"
 #include "Tester.h"
@@ -25,13 +26,13 @@ namespace BatteryTester
 	char _mqttUserName[IOTWEBCONF_WORD_LEN];
 	char _mqttUserPassword[IOTWEBCONF_WORD_LEN];
 	u_int _uniqueId = 0;
-	IotWebConfSeparator seperatorParam = IotWebConfSeparator("MQTT");
-	IotWebConfParameter mqttServerParam = IotWebConfParameter("MQTT server", "mqttServer", _mqttServer, IOTWEBCONF_WORD_LEN);
-	IotWebConfParameter mqttPortParam = IotWebConfParameter("MQTT port", "mqttPort", _mqttPort, 5, "text", NULL, "1883");
-	IotWebConfParameter mqttUserNameParam = IotWebConfParameter("MQTT user", "mqttUser", _mqttUserName, IOTWEBCONF_WORD_LEN);
-	IotWebConfParameter mqttUserPasswordParam = IotWebConfParameter("MQTT password", "mqttPass", _mqttUserPassword, IOTWEBCONF_WORD_LEN, "password");
-	IotWebConfParameter mqttRootTopicParam = IotWebConfParameter("Tester Group Name", "mqttRootTopic", _mqttRootTopic, IOTWEBCONF_WORD_LEN, "text", NULL, "Battery");
-	IotWebConfParameter mqttTesterNumberParam = IotWebConfParameter("TesterNumber", "mqttTesterNumber", _mqttTesterNumber, 2, "text", "1,2...");
+	iotwebconf::ParameterGroup mqttGroup = iotwebconf::ParameterGroup("MQTT");
+	iotwebconf::TextParameter mqttServerParam = iotwebconf::TextParameter("MQTT server", "mqttServer", _mqttServer, IOTWEBCONF_WORD_LEN);
+	iotwebconf::NumberParameter mqttPortParam = iotwebconf::NumberParameter("MQTT port", "mqttPort", _mqttPort, 5, "text", NULL, "1883");
+	iotwebconf::TextParameter mqttUserNameParam = iotwebconf::TextParameter("MQTT user", "mqttUser", _mqttUserName, IOTWEBCONF_WORD_LEN);
+	iotwebconf::PasswordParameter mqttUserPasswordParam = iotwebconf::PasswordParameter("MQTT password", "mqttPass", _mqttUserPassword, IOTWEBCONF_WORD_LEN);
+	iotwebconf::TextParameter mqttRootTopicParam = iotwebconf::TextParameter("Tester Group Name", "mqttRootTopic", _mqttRootTopic, IOTWEBCONF_WORD_LEN, "text", NULL, "Battery");
+	iotwebconf::TextParameter mqttTesterNumberParam = iotwebconf::TextParameter("TesterNumber", "mqttTesterNumber", _mqttTesterNumber, 2, "text", "1,2...");
 	const char *ntpServer = "pool.ntp.org";
 
 	void onMqttConnect(bool sessionPresent)
@@ -45,6 +46,9 @@ namespace BatteryTester
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::ping]);
+		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::outcome]);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		_mqttClient.publish(_willTopic, 0, false, "Online");
@@ -160,6 +164,11 @@ namespace BatteryTester
 				}
 				_tester1.Perform(op);
 				_tester2.Perform(op);
+			}
+			else if (strcmp(subtopic, Subtopics[Subtopic::outcome]) == 0)
+			{
+				_tester1.PublishOutcome();
+				_tester2.PublishOutcome();
 			}
 			else if (strcmp(subtopic, Subtopics[Subtopic::config]) == 0)
 			{
@@ -280,14 +289,16 @@ namespace BatteryTester
 		}
 		mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(5000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
 		WiFi.onEvent(WiFiEvent);
-		_iotWebConf.setupUpdateServer(&_httpUpdater);
-		_iotWebConf.addParameter(&seperatorParam);
-		_iotWebConf.addParameter(&mqttServerParam);
-		_iotWebConf.addParameter(&mqttPortParam);
-		_iotWebConf.addParameter(&mqttUserNameParam);
-		_iotWebConf.addParameter(&mqttUserPasswordParam);
-		_iotWebConf.addParameter(&mqttRootTopicParam);
-		_iotWebConf.addParameter(&mqttTesterNumberParam);
+		_iotWebConf.setupUpdateServer(
+			[](const char *updatePath) { _httpUpdater.setup(&_webServer, updatePath); },
+			[](const char *userName, char *password) { _httpUpdater.updateCredentials(userName, password); });
+		mqttGroup.addItem(&mqttServerParam);
+		mqttGroup.addItem(&mqttPortParam);
+		mqttGroup.addItem(&mqttUserNameParam);
+		mqttGroup.addItem(&mqttUserPasswordParam);
+		mqttGroup.addItem(&mqttRootTopicParam);
+		mqttGroup.addItem(&mqttTesterNumberParam);
+		_iotWebConf.addParameterGroup(&mqttGroup);
 		boolean validConfig = _iotWebConf.init();
 		if (!validConfig)
 		{
@@ -366,7 +377,7 @@ namespace BatteryTester
 
 	void IOT::SetupWifi(const char *ssid, const char *pw)
 	{
-		IotWebConfParameter *p = _iotWebConf.getWifiSsidParameter();
+		iotwebconf::Parameter *p = _iotWebConf.getWifiSsidParameter();
 		strcpy(p->valueBuffer, ssid);
 		logd("Setting ssid: %s", p->valueBuffer);
 		p = _iotWebConf.getWifiPasswordParameter();
@@ -375,7 +386,7 @@ namespace BatteryTester
 		p = _iotWebConf.getApPasswordParameter();
 		strcpy(p->valueBuffer, TAG); // reset to default AP password
 		logd("Setting AP password: %s", p->valueBuffer);
-		_iotWebConf.configSave();
+		_iotWebConf.saveConfig();
 		esp_restart(); // force reboot
 	}
 
@@ -386,8 +397,8 @@ namespace BatteryTester
 			char buf[MaxMQTTTopic];
 			sprintf(buf, "%s/stat/%s/%s", _mqttRootTopic, _mqttTesterNumber, subtopic);
 			int testerIndex = (atoi(_mqttTesterNumber) - 1) * 2; // 2 cells per tester * testerNumber origin 0
-			(*doc)[Elements[Id::index]] = testerIndex + pos; // cell index (origin 0) out of all testers
-			(*doc)[Elements[Id::cell]] = pos; // battery cell position (0 or 1) in this tester
+			(*doc)[Elements[Id::index]] = testerIndex + pos;	 // cell index (origin 0) out of all testers
+			(*doc)[Elements[Id::cell]] = pos;					 // battery cell position (0 or 1) in this tester
 			String s;
 			serializeJson(*doc, s);
 			logd("publish %s|%s", buf, s.c_str());

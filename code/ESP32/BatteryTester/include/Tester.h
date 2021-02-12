@@ -24,6 +24,7 @@ namespace BatteryTester
 		TesterError _errorState;
 		void Setup(ThreadController *controller);
 		void Perform(Operation op);
+		void PublishOutcome();
 		void setState(State state);
 		void run();
 		Battery *pBattery() { return _pBattery; }
@@ -42,16 +43,24 @@ namespace BatteryTester
 		int _modulo = -1;
 		uint32_t _mAs = 0; //mA seconds
 		unsigned long _stateChangeTimeStamp = 0;
+		unsigned long _operationTimeStamp = 0;
 		unsigned long _lastReadingTimeStamp = 0;
 		uint16_t _MaxTemperature; // in �C * 10
 		unsigned long _previousPoll = 0;
 		uint32_t _internalResistance;
 
 		Battery *_pBattery;
-		State _state = Unspecified; // current published state
+		State _state = Unspecified; // current state of operation 
 		int _currentStage; // index of the current state of execution
 		State* _currentOperation = 0;
-		int _cycleCount = 0;
+		uint8_t _cycleCount = 0;
+
+		// the following variables are used to produce the outcome after multiple charge/discharge cycles
+		uint8_t _cyclesCompleted = 0;
+		uint32_t _capacitySummation = 0;
+		uint32_t _internalResistanceSummation = 0;
+		uint32_t _duration = 0;
+		uint16_t _MaxTemperatureOfOperation = 0;
 
 		void TP4056_Off();
 		void TP4056_On();

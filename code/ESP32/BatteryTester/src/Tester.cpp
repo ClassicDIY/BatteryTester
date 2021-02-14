@@ -278,7 +278,7 @@ namespace BatteryTester
 			_MaxTemperature = 0;
 			_internalResistance = 0;
 			_cyclesCompleted = 0;
-			_capacitySummation = 0;
+			_capacity = 0;
 			_internalResistanceSummation = 0;
 			_MaxTemperatureOfOperation = 0;
 			_operationTimeStamp = millis();
@@ -409,14 +409,13 @@ namespace BatteryTester
 				{
 					StaticJsonDocument<MaxMQTTPayload> doc;
 					doc[Elements[Id::state]] = States[_state];
-					uint32_t capacity = _mAs / 3600;
-					doc[Elements[Id::capacity]] = capacity;
-					_capacitySummation + capacity;
+					_capacity = _mAs / 3600;
+					doc[Elements[Id::capacity]] = _capacity;
 					doc[Elements[Id::maxTemperature]] = _MaxTemperature;
 					unsigned long duration = millis() - _stateChangeTimeStamp / 1000;
 					doc[Elements[Id::duration]] = duration;
 					_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
-					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, duration, capacity);
+					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, duration, _capacity);
 					setState(NextState());
 				}
 			}
@@ -533,16 +532,16 @@ namespace BatteryTester
 
 	void Tester::PublishOutcome()
 	{
+		StaticJsonDocument<MaxMQTTPayload> doc;
+		doc[Elements[Id::cycle]] = _cyclesCompleted;
+		doc[Elements[Id::maxTemperature]] = _MaxTemperatureOfOperation;
 		if (_cyclesCompleted > 0)
 		{
-			StaticJsonDocument<MaxMQTTPayload> doc;
-			doc[Elements[Id::cycle]] = _cyclesCompleted;
-			doc[Elements[Id::maxTemperature]] = _MaxTemperatureOfOperation;
-			doc[Elements[Id::capacity]] = _capacitySummation / _cyclesCompleted;
+			doc[Elements[Id::capacity]] = _capacity / _cyclesCompleted;
 			doc[Elements[Id::internalResistance]] = _internalResistanceSummation / _cyclesCompleted;
-			doc[Elements[Id::duration]] = _duration;
-			_iot.publish(_batteryPosition, Subtopics[Subtopic::outcome], &doc, false);
 		}
+		doc[Elements[Id::duration]] = _duration;
+		_iot.publish(_batteryPosition, Subtopics[Subtopic::outcome], &doc, false);
 	}
 
 } // namespace BatteryTester

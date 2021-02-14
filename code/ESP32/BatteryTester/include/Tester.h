@@ -57,7 +57,7 @@ namespace BatteryTester
 
 		// the following variables are used to produce the outcome after multiple charge/discharge cycles
 		uint8_t _cyclesCompleted = 0;
-		uint32_t _capacitySummation = 0;
+		uint32_t _capacity = 0;
 		uint32_t _internalResistanceSummation = 0;
 		uint32_t _duration = 0;
 		uint16_t _MaxTemperatureOfOperation = 0;

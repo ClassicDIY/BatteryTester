@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "ESP32\\BatteryTester"
+		},
+		{
+			"path": "ESP32\\I2CScan"
+		},
+		{
+			"path": "Python\\WebHost"
+		}
+	],
+	"settings": {}
+}

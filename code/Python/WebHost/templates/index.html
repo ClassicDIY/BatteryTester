@@ -5,4 +5,49 @@
 
 <h1>{{operation}}</h1>
 
+
+<div class="container my-container" >
+    <div class=" row ">
+
+        <div id="cell" class="col-md-1 cell">cell</div>
+        <div class="col-md-10 ">
+            <div class="container ">
+
+                <div class="row ">
+                    <div id="state" class="col-md-2 my-col">state</div>
+                    <div id="time" class="col-md-8 my-col">time</div>
+                </div>
+                <div class="row ">
+                    <div id="voltage" class="col-3 my-col">voltage</div>
+                    <div id="current" class="col-3 my-col ">current</div>
+                    <div id="temperature" class="col-3 my-col ">temperature</div>
+                </div>
+                <div class="row ">
+                    <div id="capacity" class="col-5 my-col">capacity</div>
+                    <div id="resistance" class="col-5 my-col ">resistance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var eventSource = new EventSource("/listen")
+
+eventSource.addEventListener("message", function(e) {
+console.log(e.data)
+}, false)
+
+eventSource.addEventListener("online", function(e) {
+// console.log(e.data.color)
+data = JSON.parse(e.data)
+console.log(data)
+document.querySelector("#state").innerText = data.state
+document.querySelector("#voltage").innerText = data.voltage + ' mV'
+document.querySelector("#current").innerText = data.current + ' mA'
+document.querySelector("#temperature").innerText = data.temperature/10.0 + ' °C'
+document.querySelector("#cell").innerText = data.cell
+// document.querySelector("body").style.backgroundColor= data.color
+}, true)
+
 {% endblock %}

@@ -9,7 +9,46 @@
             integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
             crossorigin="anonymous">
         <title>{% block title%}{% endblock %}</title>
+        <style>
+            
 
+            body {
+                margin: 10px;
+            }
+        
+            .my-container {
+                border: 1px solid grey;
+                grid-gutter-width: 50px;
+            }
+        
+            .my-row {
+                border: 1px solid violet;
+                margin: 1px;
+            }
+        
+            .my-col {
+                border: 1px solid blue;
+                margin: 1px;
+            }
+            .cell {
+                border: 1px solid blue;
+                background-color: purple;
+                text-align: center;
+                padding: 10px 0;
+                color:antiquewhite;
+                font-size:xx-large;
+                margin: 1px;
+            }
+            .operation {
+                border: 2px solid rgb(255, 0, 43);
+                background-color: purple;
+                text-align: center;
+                padding: 10px 0;
+                color:antiquewhite;
+                font-size:large;
+                margin: 1px;
+            }
+        </style>
     </head>
     <body>
         <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
@@ -23,69 +62,89 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page"
-                                href="#">Home</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#"
-                                id="navbarDropdownMenuLink" role="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                Operation
-                            </a>
-                            <ul class="dropdown-menu"
-                                aria-labelledby="navbarDropdownMenuLink">
-                                <li><a class="dropdown-item" href="./Charge">Charge</a></li>
-                                <li><a class="dropdown-item" href="./Discharge">Discharge</a></li>
-                                <li><a class="dropdown-item" href="./Monitor">Monitor</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <button type="button" class="btn btn-success">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
-          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
-        </svg>
+                    <select id="mySelect" class="operation" onchange="myOperation()">
+                        <option>Monitor</option>
+                        <option>TestCycle</option>
+                        <option>Charge</option>
+                        <option>TestAndStore</option>
+                        <option>TestAndCharge</option>
+                        <option>Storage</option>
+                        <option>InternalResistance</option>
+                        <option>Discharge</option>
+                      </select>
+                    <button type="button" class="btn btn-primary" onclick="location.href='./settings'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                            height="16" fill="currentColor" class="bi bi-gear"
+                            viewBox="0 0 16 16">
+                            <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246
+                                3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1
+                                4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+                                <path d="M9.796
+                                    1.343c-.527-1.79-3.065-1.79-3.592
+                                    0l-.094.319a.873.873 0 0
+                                    1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54
+                                    2.541l.159.292a.873.873 0 0 1-.52
+                                    1.255l-.319.094c-1.79.527-1.79 3.065 0
+                                    3.592l.319.094a.873.873 0 0 1 .52
+                                    1.255l-.16.292c-.892 1.64.901 3.434 2.541
+                                    2.54l.292-.159a.873.873 0 0 1
+                                    1.255.52l.094.319c.527 1.79 3.065 1.79 3.592
+                                    0l.094-.319a.873.873 0 0 1
+                                    1.255-.52l.292.16c1.64.893 3.434-.902
+                                    2.54-2.541l-.159-.292a.873.873 0 0 1
+                                    .52-1.255l.319-.094c1.79-.527 1.79-3.065
+                                    0-3.592l-.319-.094a.873.873 0 0
+                                    1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873
+                                    0 0
+                                    1-1.255-.52l-.094-.319zm-2.633.283c.246-.835
+                                    1.428-.835 1.674 0l.094.319a1.873 1.873 0 0
+                                    0 2.693 1.115l.291-.16c.764-.415 1.6.42
+                                    1.184 1.185l-.159.292a1.873 1.873 0 0 0
+                                    1.116 2.692l.318.094c.835.246.835 1.428 0
+                                    1.674l-.319.094a1.873 1.873 0 0 0-1.115
+                                    2.693l.16.291c.415.764-.42 1.6-1.185
+                                    1.184l-.291-.159a1.873 1.873 0 0 0-2.693
+                                    1.116l-.094.318c-.246.835-1.428.835-1.674
+                                    0l-.094-.319a1.873 1.873 0 0
+                                    0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873
+                                    1.873 0 0 0 1.945
+                                    8.93l-.319-.094c-.835-.246-.835-1.428
+                                    0-1.674l.319-.094A1.873 1.873 0 0 0 3.06
+                                    4.377l-.16-.292c-.415-.764.42-1.6
+                                    1.185-1.184l.292.159a1.873 1.873 0 0 0
+                                    2.692-1.115l.094-.319z" />
+                        </svg>
                         Settings
-                      </button>
-
+                    </button>
                 </div>
             </div>
-
         </nav>
 
         {% block content%}
         {% endblock %}
-        <div id="state"></div>
-        <div id="voltage"></div>
-        <div id="current"></div>
-        <div id="temperature"></div>
-        <div id="cell"></div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
         <script>
-        var eventSource = new EventSource("/listen")
-        
-        eventSource.addEventListener("message", function(e) {
-        console.log(e.data)
-        }, false)
+            function myOperation() {
+              var x = document.getElementById("mySelect");
+              var i = x.selectedIndex;
+            //   alert("Operation "+ x.options[i].text);
+            //   document.getElementById("mySelect").innerHTML = x.options[i].text;
+              $.ajax({
+                    type: "POST",
+                    url: "/operation",
+                    data: {operation: x.options[i].text},
+                    dataType: "text",
+                    success: function(data){
+                                alert("Operation "+ operation.toString());
+                            }
+                });
+            }
+        </script>
 
-        eventSource.addEventListener("online", function(e) {
-        // console.log(e.data.color)
-        data = JSON.parse(e.data)
-        console.log(data)
-        document.querySelector("#state").innerText = data.state
-        document.querySelector("#voltage").innerText = data.voltage
-        document.querySelector("#current").innerText = data.current
-        document.querySelector("#temperature").innerText = data.temperature
-        document.querySelector("#cell").innerText = data.cell
-        // document.querySelector("body").style.backgroundColor= data.color
-        }, true)
-
-    </script>
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
             crossorigin="anonymous">
-    </script>
+        </script>
     </body>
 </html>

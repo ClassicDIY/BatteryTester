@@ -124,8 +124,10 @@ namespace BatteryTester
 				sprintf(buf, "%s/tele/%s/ping", _mqttRootTopic, _mqttTesterNumber);
 				_JSdoc.clear();
 				_JSdoc["IP"] = WiFi.localIP().toString().c_str();
+				_JSdoc["Version"] = CONFIG_VERSION;
+				_JSdoc["TesterNumber"] = _mqttTesterNumber;
 				serializeJson(_JSdoc, s);
-				_mqttClient.publish(buf, 0, true, s.c_str());
+				_mqttClient.publish(buf, 0, false, s.c_str());
 			}
 			else if (strcmp(subtopic, Subtopics[Subtopic::operation]) == 0) // mode of operation
 			{

@@ -62,16 +62,8 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                    <select id="mySelect" class="operation" onchange="myOperation()">
-                        <option>Monitor</option>
-                        <option>TestCycle</option>
-                        <option>Charge</option>
-                        <option>TestAndStore</option>
-                        <option>TestAndCharge</option>
-                        <option>Storage</option>
-                        <option>InternalResistance</option>
-                        <option>Discharge</option>
-                      </select>
+                      {% block menu%}
+                      {% endblock %}
                     <button type="button" class="btn btn-primary" onclick="location.href='./settings'">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16"
                             height="16" fill="currentColor" class="bi bi-gear"
@@ -123,24 +115,6 @@
         {% block content%}
         {% endblock %}
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-        <script>
-            function myOperation() {
-              var x = document.getElementById("mySelect");
-              var i = x.selectedIndex;
-            //   alert("Operation "+ x.options[i].text);
-            //   document.getElementById("mySelect").innerHTML = x.options[i].text;
-              $.ajax({
-                    type: "POST",
-                    url: "/operation",
-                    data: {operation: x.options[i].text},
-                    dataType: "text",
-                    success: function(data){
-                                alert("Operation "+ operation.toString());
-                            }
-                });
-            }
-        </script>
-
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"

@@ -40,8 +40,12 @@
         </div>
     </div>
 </div> -->
+{% block operation%}
+<div id="operation"></div>
+{% endblock %}
+
+
 <div class="container my-container">
-    {{ operation }}
     <div class="container">
         <table class="table">
             <thead class="thead-dark">
@@ -86,35 +90,52 @@
             url: "/operation",
             data: {operation: x.options[i].text},
             dataType: "text",
-            success: function(data){
-                        alert("Operation "+ operation.toString());
-                    }
+            // success: function(data){
+            //             alert("Operation "+ operation.toString());
+            //         }
         });
     }
 </script>
 <script>
     var eventSource = new EventSource("/listen")
 
-    eventSource.addEventListener("message", function(e) {
-    console.log(e.data)
-    }, false)
+    // eventSource.addEventListener("message", function(e) {
+    // console.log(e.data)
+    // }, false)
 
     var colours = {"Standby":"#f0f8ff","NoBatteryFound":"#00ffff","Monitor":"#7fffd4","Stabilize":"#f0ffff", "InternalResistance":"#f5f5dc","FullCharge":"#ff0000","Discharge":"#ffe4c4","StorageCharge":"#ffe4c4","ThermalShutdown":"#ffe4c4","Complete":"#ffe4c4"} 
 
-    eventSource.addEventListener("online", function(e) {
+    eventSource.addEventListener("monitor", function(e) {
         data = JSON.parse(e.data)
         document.querySelector("#stage"+data.index).innerText = data.state;
         document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
         document.querySelector("#current"+data.index).innerText = data.current + ' mA';
         document.querySelector("#temperature"+data.index).innerText = data.temperature/10.0 + ' °C';
+        document.querySelector("#time"+data.index).innerText = "-";
+        document.querySelector("#capacity"+data.index).innerText = "-";
+        document.querySelector("#resistance"+data.index).innerText = "-";
         // document.querySelector("#cell").innerText = data.cell;
         if (typeof colours[data.state] != 'undefined')
             document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
     }, true)
 
-    eventSource.addEventListener("operation", function(e) {
+    eventSource.addEventListener("mode", function(e) {
         data = JSON.parse(e.data)
-
+        document.querySelector("#stage"+data.index).innerText = data.state;
+        document.querySelector("#voltage"+data.index).innerText = "-";
+        document.querySelector("#current"+data.index).innerText ="-";
+        document.querySelector("#temperature"+data.index).innerText = "-";
+        document.querySelector("#time"+data.index).innerText = "-";
+        document.querySelector("#capacity"+data.index).innerText = "-";
+        document.querySelector("#resistance"+data.index).innerText = "-";
+        if (typeof colours[data.state] != 'undefined')
+            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
     }, true)
+
+    eventSource.addEventListener("operation", function(e) {
+        document.querySelector("#operation").innerText = e.data;
+    }, true)
+
+
 </script>
 {% endblock %}

@@ -61,9 +61,16 @@
                     aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                <div class="container-fluid">
+                    {% block menu%}
+                    {% endblock %}
+                </div>
+                <div class="container-fluid navbar-brand">
+                    {% block operation%}
+                    {% endblock %}
+                </div>
                 <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                      {% block menu%}
-                      {% endblock %}
+
                     <button type="button" class="btn btn-primary" onclick="location.href='./settings'">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16"
                             height="16" fill="currentColor" class="bi bi-gear"

@@ -1,0 +1,35 @@
+.body {
+    margin: 10px;
+}
+
+.my-container {
+    border: 10px solid grey;
+}
+
+.my-row {
+    border: 1px solid violet;
+    margin: 1px;
+}
+
+.my-col {
+    border: 1px solid blue;
+    margin: 1px;
+}
+.cell {
+    border: 1px solid blue;
+    background-color: purple;
+    text-align: center;
+    padding: 10px 0;
+    color:antiquewhite;
+    font-size:xx-large;
+    margin: 1px;
+}
+.operation {
+    border: 2px solid rgb(255, 0, 43);
+    background-color: purple;
+    text-align: center;
+    padding: 10px 0;
+    color:antiquewhite;
+    font-size:large;
+    margin: 1px;
+}

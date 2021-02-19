@@ -9,45 +9,9 @@
             integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
             crossorigin="anonymous">
         <title>{% block title%}{% endblock %}</title>
-        <style>
-            
-
-            body {
-                margin: 10px;
-            }
-        
-            .my-container {
-                border: 10px solid grey;
-            }
-        
-            .my-row {
-                border: 1px solid violet;
-                margin: 1px;
-            }
-        
-            .my-col {
-                border: 1px solid blue;
-                margin: 1px;
-            }
-            .cell {
-                border: 1px solid blue;
-                background-color: purple;
-                text-align: center;
-                padding: 10px 0;
-                color:antiquewhite;
-                font-size:xx-large;
-                margin: 1px;
-            }
-            .operation {
-                border: 2px solid rgb(255, 0, 43);
-                background-color: purple;
-                text-align: center;
-                padding: 10px 0;
-                color:antiquewhite;
-                font-size:large;
-                margin: 1px;
-            }
-        </style>
+        <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous"> -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style1.css') }}" >
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style5.css') }}" >
     </head>
     <body>
         <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
@@ -125,6 +89,14 @@
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
             crossorigin="anonymous">
+        </script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $('#sidebarCollapse').on('click', function () {
+                    $('#sidebar').toggleClass('active');
+                    $(this).toggleClass('active');
+                });
+            });
         </script>
     </body>
 </html>

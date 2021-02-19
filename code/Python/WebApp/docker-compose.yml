@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+
+  flask:
+    build: ./flask
+    container_name: battery_tester
+    restart: unless-stopped
+    environment:
+      - APP_NAME=BatteryTester
+    expose:
+      - 8080
+    networks:
+      - classicdiy
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - classicdiy
+
+networks:
+  classicdiy: # Exposed by your host.
+    # external: true
+    name: classicdiy
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 10.77.66.0/25

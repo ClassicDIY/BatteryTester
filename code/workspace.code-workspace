@@ -7,8 +7,15 @@
 			"path": "ESP32\\I2CScan"
 		},
 		{
-			"path": "Python\\WebHost"
+			"path": "..\\..\\..\\..\\..\\..\\inetpub\\wwwroot"
+		},
+		{
+			"path": "Python\\WebApp"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"functional": "cpp"
+		}
+	}
 }

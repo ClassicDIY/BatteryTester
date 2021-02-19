@@ -3,7 +3,7 @@ import json
 import time
 import sys
 from random import randint, seed
-from logger import log
+from app.logger import log
 
 argumentValues = { 'mqttHost':"192.168.86.25", 'mqttPort':"1883", 'mqttRoot':"BatteryTester", 'mqttUser':"Argon", 'mqttPassword':"volvo4"}
 
@@ -82,7 +82,7 @@ def run(on_stat, on_tele, on_cmnd):
 
     global doStop, mqttClient
 
-    log.info("BatteryTester starting up...")
+    log.info("BatteryTester MQTT starting up...")
 
     mqttErrorCount = 0
 

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Battery Tester{% endblock %}
+
+{% block menu%}
+<select id="mySelect" class="operation" onchange="myOperation()">
+    <option>Monitor</option>
+    <option>TestCycle</option>
+    <option>Charge</option>
+    <option>TestAndStore</option>
+    <option>TestAndCharge</option>
+    <option>Storage</option>
+    <option>InternalResistance</option>
+    <option>Discharge</option>
+</select>
+{% endblock %}
+
+{% block content %}
+
+<!-- <div class="container my-container" >
+    <div class=" row ">
+
+        <div id="cell" class="col-md-1 cell">cell</div>
+        <div class="col-md-10 ">
+            <div class="container ">
+
+                <div class="row ">
+                    <div id="state" class="col-md-2 my-col">state</div>
+                    <div id="time" class="col-md-8 my-col">time</div>
+                </div>
+                <div class="row ">
+                    <div id="voltage" class="col-3 my-col">voltage</div>
+                    <div id="current" class="col-3 my-col ">current</div>
+                    <div id="temperature" class="col-3 my-col ">temperature</div>
+                </div>
+                <div class="row ">
+                    <div id="capacity" class="col-5 my-col">capacity</div>
+                    <div id="resistance" class="col-5 my-col ">resistance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+{% block operation%}
+<div id="operation"></div>
+{% endblock %}
+
+
+<div class="container my-container">
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col"></th>
+                <th scope="col">Stage</th>
+                <th scope="col">Voltage</th>
+                <th scope="col">Current</th>
+                <th scope="col">Temperature</th>
+                <th scope="col">Elapsed Time</th>
+                <th scope="col">Capacity</th>
+                <th scope="col">Resistance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for n in range(0, cellCount) %}
+            <tr>
+                <td id="cell{{n}}"> {{n+1}} </td>
+                <td id="colour{{n}}"> </td>
+                <td id="stage{{n}}"> - </td>
+                <td id="voltage{{n}}"> - </td>
+                <td id="current{{n}}"> - </td>
+                <td id="temperature{{n}}"> - </td>
+                <td id="time{{n}}"> - </td>
+                <td id="capacity{{n}}"> - </td>
+                <td id="resistance{{n}}"> - </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function myOperation() {
+      var x = document.getElementById("mySelect");
+      var i = x.selectedIndex;
+    //   alert("Operation "+ x.options[i].text);
+    //   document.getElementById("mySelect").innerHTML = x.options[i].text;
+      $.ajax({
+            type: "POST",
+            url: "/operation",
+            data: {operation: x.options[i].text},
+            dataType: "text",
+            // success: function(data){
+            //             alert("Operation "+ operation.toString());
+            //         }
+        });
+    }
+</script>
+<script>
+    var eventSource = new EventSource("/listen")
+
+    // eventSource.addEventListener("message", function(e) {
+    // console.log(e.data)
+    // }, false)
+
+    var colours = {"Standby":"#bfbf0a","NoBatteryFound":"#7d807f","Monitor":"#1229c4","Stabilize":"#a912c4", "InternalResistance":"#c44d12","FullCharge":"#2fff05","Discharge":"#bf0a0a","StorageCharge":"#bf7a0a","ThermalShutdown":"#bf0a68","Complete":"#646b66"} 
+
+    eventSource.addEventListener("monitor", function(e) {
+        data = JSON.parse(e.data)
+        document.querySelector("#stage"+data.index).innerText = data.state;
+        if ('voltage' in data) {
+            document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
+        }
+        if ('current' in data) {
+            document.querySelector("#current"+data.index).innerText = data.current + ' mA';
+        }
+        if ('temperature' in data) {
+            document.querySelector("#temperature"+data.index).innerText = data.temperature/10.0 + ' °C';
+        }
+        // if ('temperature' in data) {
+        // document.querySelector("#time"+data.index).innerText = "-";
+        // document.querySelector("#capacity"+data.index).innerText = "-";
+        // document.querySelector("#resistance"+data.index).innerText = "-";
+
+        if (typeof colours[data.state] != 'undefined')
+            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+    }, true)
+
+    eventSource.addEventListener("mode", function(e) {
+        data = JSON.parse(e.data)
+        document.querySelector("#stage"+data.index).innerText = data.state;
+        if (typeof colours[data.state] != 'undefined')
+            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+    }, true)
+
+    eventSource.addEventListener("result", function(e) {
+        data = JSON.parse(e.data)
+        console.log(data)
+        document.querySelector("#stage"+data.index).innerText = data.state;
+        if ('voltage' in data) {
+            document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
+        }
+        if ('current' in data) {
+            document.querySelector("#current"+data.index).innerText = data.current + ' mA';
+        }
+        if ('maxTemperature' in data) {
+            document.querySelector("#temperature"+data.index).innerText = data.maxTemperature/10.0 + ' °C';
+        }
+        if ('duration' in data) {
+            document.querySelector("#time"+data.index).innerText = data.duration;
+        }
+        if ('capacity' in data) {
+            document.querySelector("#capacity"+data.index).innerText = data.capacity + 'mAh';
+        }
+        if ('internalResistance' in data) {
+            document.querySelector("#resistance"+data.index).innerText = data.internalResistance + ' mΩ';
+        }
+        if (typeof colours[data.state] != 'undefined')
+            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+    }, true)
+
+    eventSource.addEventListener("operation", function(e) {
+        document.querySelector("#operation").innerText = e.data;
+    }, true)
+
+
+</script>
+{% endblock %}

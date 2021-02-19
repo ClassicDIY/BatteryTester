@@ -1,14 +1,16 @@
+from app import app
+import os
 from flask.helpers import url_for
-from gevent import monkey; monkey.patch_all()
+# from gevent import monkey; monkey.patch_all()
 from flask import Flask, Response, request, url_for, render_template, jsonify
-from gevent.pywsgi import WSGIServer
+# from gevent.pywsgi import WSGIServer
 import json
 import sys
 import queue
-from settings import settings
-from mqtt import run, mqttPublish
-from logger import log
-from message import Message
+from app.settings import settings
+from app.mqtt import run, mqttPublish
+from app.logger import log
+from app.message import Message
 
 # --------------------------------------------------------------------------- # 
 # Counters and status variables
@@ -16,9 +18,6 @@ from message import Message
 theQueue                  = queue.Queue()
 cellCount                   = 0
 current_operation           = "Monitor"
-
-app = Flask(__name__)
-app.register_blueprint(settings, url_prefix="")
 
 @app.route("/")
 def render_index():
@@ -59,6 +58,10 @@ def on_stat(client, userdata, message):
           message = json.loads(msg)
           theMessage = Message("mode", json.dumps(message))
           theQueue.put(theMessage)
+        elif "result" in message.topic:
+          message = json.loads(msg)
+          theMessage = Message("result", json.dumps(message))
+          theQueue.put(theMessage)
 
 def on_tele(client, userdata, message):
 
@@ -81,11 +84,14 @@ def on_cmnd(client, userdata, message):
 
 
 if __name__ == "__main__":
+  log.info("BatteryTester starting up...")
   run(on_stat, on_tele, on_cmnd)
-  app.run(port=80)
+  app.run()
   # http_server = WSGIServer(("localhost", 8008), app)
   # http_server.serve_forever()
 
+def init():
+  run(on_stat, on_tele, on_cmnd)
 
 
 

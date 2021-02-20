@@ -7,10 +7,6 @@ from app.logger import log
 
 argumentValues = { 'mqttHost':"192.168.86.25", 'mqttPort':"1883", 'mqttRoot':"BatteryTester", 'mqttUser':"Argon", 'mqttPassword':"volvo4"}
 
-# --------------------------------------------------------------------------- # 
-# Counters and status variables
-# --------------------------------------------------------------------------- # 
-infoPublished               = False
 mqttConnected               = False
 mqttClient                  = None
 
@@ -19,7 +15,7 @@ mqttClient                  = None
 # MQTT On Connect function
 # --------------------------------------------------------------------------- # 
 def on_connect(client, userdata, flags, rc):
-    global mqttConnected, mqttErrorCount, mqttClient
+    global mqttConnected, mqttClient
     if rc==0:
         log.debug("MQTT connected OK Returned code={}".format(rc))
         #subscribe to the commands
@@ -39,7 +35,6 @@ def on_connect(client, userdata, flags, rc):
             log.exception(e, exc_info=True)
 
         mqttConnected = True
-        mqttErrorCount = 0
     else:
         mqttConnected = False
         log.error("MQTT Bad connection Returned code={}".format(rc))
@@ -54,46 +49,44 @@ def on_disconnect(client, userdata, rc):
     if rc!=mqttclient.MQTT_ERR_SUCCESS:
         log.debug("on_disconnect: Disconnected. ReasonCode={}".format(rc))
 
-
-            
-           
 # --------------------------------------------------------------------------- # 
 # MQTT Publish the data
 # --------------------------------------------------------------------------- # 
 def mqttPublish(data, subtopic):
-    global mqttConnected, mqttErrorCount
+    global mqttConnected
 
     topic = "{}/cmnd/{}".format(argumentValues['mqttRoot'], subtopic)
-    log.debug("Publishing: {}".format(topic))
+    log.debug("Publishing: {} connected {} ".format(topic, mqttConnected))
     
-    try:
-        mqttClient.publish(topic, data)
-        return True
-    except Exception as e:
-        log.error("MQTT Publish Error Topic:{}".format(topic))
-        log.exception(e, exc_info=True)
-        mqttConnected = False
-        return False
-
+    if mqttConnected:
+        try:
+            mqttClient.publish(topic, data)
+            return True
+        except Exception as e:
+            log.error("MQTT Publish Error Topic:{}".format(topic))
+            log.exception(e, exc_info=True)
+            mqttConnected = False
+            return False
+    else:
+        client =  mqttclient.Client()
+        client.username_pw_set(argumentValues['mqttUser'], password=argumentValues['mqttPassword'])
+        if client.connect(host=argumentValues['mqttHost'], port=int(argumentValues['mqttPort'])) != 0:
+            log.error("Unable to connect to MQTT")
+        client.publish(topic, data)
+        client.disconnect()
+        
 # --------------------------------------------------------------------------- # 
 # Main
 # --------------------------------------------------------------------------- # 
 def run(on_stat, on_tele, on_cmnd):
 
-    global doStop, mqttClient
-
-    log.info("BatteryTester MQTT starting up...")
-
-    mqttErrorCount = 0
-
+    global mqttClient
     #setup the MQTT Client for publishing and subscribing
     clientId = argumentValues['mqttUser'] + "_mqttclient_" + str(randint(100, 999))
-    log.info("Connecting with clientId=" + clientId)
     mqttClient = mqttclient.Client(clientId) 
     mqttClient.username_pw_set(argumentValues['mqttUser'], password=argumentValues['mqttPassword'])
     mqttClient.on_connect = on_connect    
     mqttClient.on_disconnect = on_disconnect  
-
     mqttClient.message_callback_add("{}/stat/#".format(argumentValues['mqttRoot']), on_stat)
     mqttClient.message_callback_add("{}/tele/#".format(argumentValues['mqttRoot']), on_tele)
     mqttClient.message_callback_add("{}/cmnd/#".format(argumentValues['mqttRoot']), on_cmnd)
@@ -103,6 +96,4 @@ def run(on_stat, on_tele, on_cmnd):
     except Exception as e:
         log.error("Unable to connect to MQTT, exiting...")
         sys.exit(2)
-
-    
     mqttClient.loop_start()

@@ -2,8 +2,9 @@ from app import app
 import os
 from flask.helpers import url_for
 # from gevent import monkey; monkey.patch_all()
-from flask import Flask, Response, request, url_for, render_template, jsonify
+from flask import Flask, Response, request, url_for, render_template, jsonify, session
 # from gevent.pywsgi import WSGIServer
+from multiprocessing import Queue, Value
 import json
 import sys
 import queue
@@ -13,21 +14,18 @@ from app.logger import log
 from app.message import Message
 
 # --------------------------------------------------------------------------- # 
-# Counters and status variables
+# Sharing Data Between Processes Using multiprocessing Queue
 # --------------------------------------------------------------------------- # 
-theQueue                  = queue.Queue()
-cellCount                   = 0
-current_operation           = "Monitor"
+theQueue                  = Queue()
+cellCount                 = Value('i', 0)
 
 @app.route("/")
 def render_index():
-   return render_template("index.html", operation = current_operation, cellCount = cellCount)
+  return render_template("index.html", operation = 'Monitor', cellCount = cellCount.value)
 
 @app.route('/operation', methods=['POST'])
 def operation():
-  global operation
   current_operation = request.form.get("operation")
-  log.debug(current_operation)
   mqttPublish(current_operation, "operation")
   return jsonify(status="success")
 
@@ -65,12 +63,12 @@ def on_stat(client, userdata, message):
 
 def on_tele(client, userdata, message):
 
-        global theQueue, cellCount
+        global cellCount
         msg = message.payload.decode(encoding='UTF-8').upper()
         log.debug("Received TELE  {} : {}".format(message.topic, msg))
         if "ping" in message.topic:
-            cellCount += 2
-            log.debug("cellCount  {} ".format(cellCount))
+            cellCount.value += 2
+            log.debug("cellCount at on_tele  {} ".format(cellCount.value))
 
 
 def on_cmnd(client, userdata, message):
@@ -83,14 +81,15 @@ def on_cmnd(client, userdata, message):
           theQueue.put(theMessage)
 
 
-if __name__ == "__main__":
-  log.info("BatteryTester starting up...")
-  run(on_stat, on_tele, on_cmnd)
-  app.run()
-  # http_server = WSGIServer(("localhost", 8008), app)
-  # http_server.serve_forever()
+# if __name__ == "__main__":
+#   log.info("BatteryTester starting up...")
+#   run(on_stat, on_tele, on_cmnd)
+#   app.run()
+#   # http_server = WSGIServer(("localhost", 8008), app)
+#   # http_server.serve_forever()
 
 def init():
+  log.info("BatteryTester init()")
   run(on_stat, on_tele, on_cmnd)
 
 

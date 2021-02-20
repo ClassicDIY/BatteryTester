@@ -10,6 +10,8 @@ services:
       - APP_NAME=BatteryTester
     expose:
       - 8080
+    depends_on:
+      - nginx
     networks:
       - classicdiy
 
@@ -23,11 +25,4 @@ services:
       - classicdiy
 
 networks:
-  classicdiy: # Exposed by your host.
-    # external: true
-    name: classicdiy
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-      - subnet: 10.77.66.0/25
+  classicdiy: 

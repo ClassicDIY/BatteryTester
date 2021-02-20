@@ -24,8 +24,9 @@
     font-size:xx-large;
     margin: 1px;
 }
+
 .operation {
-    border: 2px solid rgb(255, 0, 43);
+    border: 2px solid rgb(80, 72, 73);
     background-color: purple;
     text-align: center;
     padding: 10px 0;
@@ -33,3 +34,19 @@
     font-size:large;
     margin: 1px;
 }
+
+
+.opitem {
+    border: 2px solid rgb(80, 72, 73);
+    background-color: rgb(83, 74, 83);
+    text-align: center;
+    padding: 10px 0;
+    color:antiquewhite;
+    font-size:medium;
+    margin: 1px;
+    width: 100%;
+}
+
+
+
+

@@ -1,28 +1,18 @@
-version: "3.7"
+version: "3"
 
 services:
 
-  flask:
-    build: ./flask
+  web:
+    build: .
     container_name: battery_tester
     restart: unless-stopped
-    environment:
-      - APP_NAME=BatteryTester
-    expose:
-      - 8080
-    depends_on:
-      - nginx
-    networks:
-      - classicdiy
-
-  nginx:
-    build: ./nginx
-    container_name: nginx
-    restart: unless-stopped
+    # volumes:
+    #   - ./app:/app
     ports:
       - "80:80"
-    networks:
-      - classicdiy
-
-networks:
-  classicdiy: 
+    environment:
+      - APP_NAME=BatteryTester
+      - FLASK_APP=app.py
+      - FLASK_DEBUG=1
+      - 'RUN=flask run --host=0.0.0.0 --port=80'
+    command: flask run --host=0.0.0.0 --port=80

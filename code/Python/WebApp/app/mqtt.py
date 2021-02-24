@@ -3,7 +3,7 @@ import json
 import time
 import sys
 from random import randint, seed
-from app.logger import log
+from .logger import log
 
 argumentValues = { 'mqttHost':"192.168.86.25", 'mqttPort':"1883", 'mqttRoot':"BatteryTester", 'mqttUser':"Argon", 'mqttPassword':"volvo4"}
 

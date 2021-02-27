@@ -274,6 +274,8 @@ proguard/
 # idea files
 *.iml
 .idea/
-code/ESP32/BatteryTester/.vscode/settings.json
-code/Python/WebHost/.vscode/extensions.json
-code/Python/WebApp/app/uploads/firmware.bin
+
+.vscode/
+firmware.bin
+.vscode/launch.json
+code/ESP32/I2CScan/.vscode/launch.json

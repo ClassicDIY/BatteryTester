@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Battery Tester{% endblock %}
 
-{% block content %}
-
-
     {% block operation%}
     <div id="operation"></div>
     {% endblock %}
 
+    {% block content %}
     <div class="container my-container">
         <table class="table">
             <thead class="thead-dark">
@@ -40,76 +38,76 @@
             </tbody>
         </table>
     </div>
-</div>
+    {% endblock %}
+    {% block script%}
+    <script>
+        var eventSource = new EventSource("/listen")
 
-<script>
-    var eventSource = new EventSource("/listen")
+        // eventSource.addEventListener("message", function(e) {
+        // console.log(e.data)
+        // }, false)
 
-    // eventSource.addEventListener("message", function(e) {
-    // console.log(e.data)
-    // }, false)
+        var colours = {"Standby":"#bfbf0a","NoBatteryFound":"#7d807f","Monitor":"#1229c4","Stabilize":"#a912c4", "InternalResistance":"#c44d12","FullCharge":"#2fff05","Discharge":"#bf0a0a","StorageCharge":"#bf7a0a","ThermalShutdown":"#bf0a68","Complete":"#646b66"} 
 
-    var colours = {"Standby":"#bfbf0a","NoBatteryFound":"#7d807f","Monitor":"#1229c4","Stabilize":"#a912c4", "InternalResistance":"#c44d12","FullCharge":"#2fff05","Discharge":"#bf0a0a","StorageCharge":"#bf7a0a","ThermalShutdown":"#bf0a68","Complete":"#646b66"} 
+        eventSource.addEventListener("monitor", function(e) {
+            data = JSON.parse(e.data)
+            document.querySelector("#stage"+data.index).innerText = data.state;
+            if ('voltage' in data) {
+                document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
+            }
+            if ('current' in data) {
+                document.querySelector("#current"+data.index).innerText = data.current + ' mA';
+            }
+            if ('temperature' in data) {
+                document.querySelector("#temperature"+data.index).innerText = data.temperature/10.0 + ' °C';
+            }
+            // if ('temperature' in data) {
+            // document.querySelector("#time"+data.index).innerText = "-";
+            // document.querySelector("#capacity"+data.index).innerText = "-";
+            // document.querySelector("#resistance"+data.index).innerText = "-";
 
-    eventSource.addEventListener("monitor", function(e) {
-        data = JSON.parse(e.data)
-        document.querySelector("#stage"+data.index).innerText = data.state;
-        if ('voltage' in data) {
-            document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
-        }
-        if ('current' in data) {
-            document.querySelector("#current"+data.index).innerText = data.current + ' mA';
-        }
-        if ('temperature' in data) {
-            document.querySelector("#temperature"+data.index).innerText = data.temperature/10.0 + ' °C';
-        }
-        // if ('temperature' in data) {
-        // document.querySelector("#time"+data.index).innerText = "-";
-        // document.querySelector("#capacity"+data.index).innerText = "-";
-        // document.querySelector("#resistance"+data.index).innerText = "-";
+            if (typeof colours[data.state] != 'undefined')
+                document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+        }, true)
 
-        if (typeof colours[data.state] != 'undefined')
-            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
-    }, true)
+        eventSource.addEventListener("mode", function(e) {
+            data = JSON.parse(e.data)
+            document.querySelector("#stage"+data.index).innerText = data.state;
+            if (typeof colours[data.state] != 'undefined')
+                document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+        }, true)
 
-    eventSource.addEventListener("mode", function(e) {
-        data = JSON.parse(e.data)
-        document.querySelector("#stage"+data.index).innerText = data.state;
-        if (typeof colours[data.state] != 'undefined')
-            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
-    }, true)
+        eventSource.addEventListener("result", function(e) {
+            data = JSON.parse(e.data)
+            console.log(data)
+            document.querySelector("#stage"+data.index).innerText = data.state;
+            if ('voltage' in data) {
+                document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
+            }
+            if ('current' in data) {
+                document.querySelector("#current"+data.index).innerText = data.current + ' mA';
+            }
+            if ('maxTemperature' in data) {
+                document.querySelector("#temperature"+data.index).innerText = data.maxTemperature/10.0 + ' °C';
+            }
+            if ('duration' in data) {
+                document.querySelector("#time"+data.index).innerText = data.duration;
+            }
+            if ('capacity' in data) {
+                document.querySelector("#capacity"+data.index).innerText = data.capacity + 'mAh';
+            }
+            if ('internalResistance' in data) {
+                document.querySelector("#resistance"+data.index).innerText = data.internalResistance + ' mΩ';
+            }
+            if (typeof colours[data.state] != 'undefined')
+                document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+        }, true)
 
-    eventSource.addEventListener("result", function(e) {
-        data = JSON.parse(e.data)
-        console.log(data)
-        document.querySelector("#stage"+data.index).innerText = data.state;
-        if ('voltage' in data) {
-            document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
-        }
-        if ('current' in data) {
-            document.querySelector("#current"+data.index).innerText = data.current + ' mA';
-        }
-        if ('maxTemperature' in data) {
-            document.querySelector("#temperature"+data.index).innerText = data.maxTemperature/10.0 + ' °C';
-        }
-        if ('duration' in data) {
-            document.querySelector("#time"+data.index).innerText = data.duration;
-        }
-        if ('capacity' in data) {
-            document.querySelector("#capacity"+data.index).innerText = data.capacity + 'mAh';
-        }
-        if ('internalResistance' in data) {
-            document.querySelector("#resistance"+data.index).innerText = data.internalResistance + ' mΩ';
-        }
-        if (typeof colours[data.state] != 'undefined')
-            document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
-    }, true)
-
-    eventSource.addEventListener("operation", function(e) {
-        document.querySelector("#operation").innerText = e.data;
-    }, true)
+        eventSource.addEventListener("operation", function(e) {
+            document.querySelector("#operation").innerText = e.data;
+        }, true)
 
 
-</script>
+    </script>
 
 {% endblock %}

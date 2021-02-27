@@ -142,4 +142,7 @@ dmypy.json
 # profiling data
 .prof
 
+# binaries uploaded
+.bin
+
 # End of https://www.toptal.com/developers/gitignore/api/python

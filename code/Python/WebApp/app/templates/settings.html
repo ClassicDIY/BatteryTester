@@ -1,7 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Cell{% endblock %}
+{% block title %}Settings{% endblock %}
 
 {% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col">
 
-<h1> Settings </h1>
+        <h1>Configuration</h1>
+        <hr>
+
+        <form action="/configure" method="POST">
+
+            <div class="form-group">
+            <label>Dummy</label>
+
+            </div>
+
+            <button type="submit" class="btn btn-primary">Apply</button>
+
+        </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

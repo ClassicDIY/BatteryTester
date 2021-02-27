@@ -276,3 +276,4 @@ proguard/
 .idea/
 code/ESP32/BatteryTester/.vscode/settings.json
 code/Python/WebHost/.vscode/extensions.json
+code/Python/WebApp/app/uploads/firmware.bin

@@ -66,8 +66,20 @@ namespace BatteryTester
 	{
 		logd("Connected to MQTT. Session present: %d", sessionPresent);
 		char mqttCmndTopic[STR_LEN];
-		sprintf(mqttCmndTopic, "%s/cmnd/#", _mqttRootTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::operation]);
 		uint16_t packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::config]);
+		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::ping]);
+		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::outcome]);
+		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
+		logd("MQTT subscribing to: %s", mqttCmndTopic);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s/%s", _mqttRootTopic, _mqttTesterNumber, Subtopics[Subtopic::flash]);
+		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		_mqttClient.publish(_willTopic, 0, false, "Online");
 		_tester1.setState(Standby);
@@ -161,6 +173,8 @@ namespace BatteryTester
 			char buf[MaxMQTTTopic + 1];
 			strncpy(buf, payload, len);
 			buf[len] = 0;
+			char tbuf[16];
+			sprintf(tbuf, "%s/%s", _mqttTesterNumber, Subtopics[Subtopic::flash]);
 			logd("Payload: %s", buf);
 			if (strcmp(subtopic, Subtopics[Subtopic::ping]) == 0) // ping telemetry response with IP address
 			{
@@ -266,7 +280,7 @@ namespace BatteryTester
 					}
 				}
 			}
-			else if (strcmp(subtopic, Subtopics[Subtopic::ota]) == 0)
+			else if (strcmp(subtopic, tbuf) == 0) // testerNumber/flash
 			{
 				_JSdoc.clear();
 				DeserializationError error = deserializeJson(_JSdoc, payload, len);
@@ -437,7 +451,8 @@ namespace BatteryTester
 			HttpsOTAStatus_t otastatus = HttpsOTA.status();
 			if (otastatus == HTTPS_OTA_SUCCESS)
 			{
-				logd("Firmware written successfully. To reboot device, call API ESP.restart() or PUSH restart button on device");
+				logd("Firmware written successfully. Rebooting...");
+				ESP.restart();
 			}
 			else if (otastatus == HTTPS_OTA_FAIL)
 			{

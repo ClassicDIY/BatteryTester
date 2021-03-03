@@ -67,7 +67,7 @@ namespace BatteryTester
 		config,
 		ping,
 		outcome,
-		ota
+		flash
 	};
-	static const char * const Subtopics[] = {"result", "operation", "mode", "monitor", "config", "ping", "outcome", "ota"};
+	static const char * const Subtopics[] = {"result", "operation", "mode", "monitor", "config", "ping", "outcome", "flash"};
 }

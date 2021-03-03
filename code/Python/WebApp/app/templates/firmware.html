@@ -22,8 +22,47 @@
             <button type="submit" class="btn btn-primary">Upload</button>
 
         </form>
-
+            <button type="button" id="publishOta" class="btn btn-primary">Publish</button>
+        </div>
+        <div class="row">
+            <table class="table">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Tester</th>
+                        <th scope="col">IP Address</th>
+                        <th scope="col">Version</th>
+                        <th scope="col"> </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for n in range(0, devices) %}
+                    <tr>
+                        <td id="tester{{n}}"> {{n+1}} </td>
+                        <td id="address{{n}}"> </td>
+                        <td id="version{{n}}"> - </td>
+                        <td> <button type="button" id="flash{{n}}" class="btn btn-primary">Publish</button> </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+{% endblock %}
+{% block script%}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#publishOta").on("click", function(e){
+            $.ajax({
+                type: "POST",
+                url: "/publishOta",
+                data: {operation: e.target.innerHTML},
+                dataType: "text",
+                // success: function(data){
+                //             alert("Operation "+ operation.toString());
+                //         }
+        });
+      });
+    });
+</script>
 {% endblock %}

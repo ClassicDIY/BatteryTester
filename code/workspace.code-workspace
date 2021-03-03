@@ -15,7 +15,9 @@
 	],
 	"settings": {
 		"files.associations": {
-			"functional": "cpp"
+			"functional": "cpp",
+			"regex": "cpp",
+			"sstream": "cpp"
 		}
 	}
 }

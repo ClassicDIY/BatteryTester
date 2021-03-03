@@ -1,3 +1,4 @@
+from flask import current_app
 from paho.mqtt import client as mqttclient
 import json
 import time
@@ -5,95 +6,85 @@ import sys
 from random import randint, seed
 from .logger import log
 
-argumentValues = { 'mqttHost':"192.168.86.25", 'mqttPort':"1883", 'mqttRoot':"BatteryTester", 'mqttUser':"Argon", 'mqttPassword':"volvo4"}
+class mqtt(object):
 
-mqttConnected               = False
-mqttClient                  = None
+    mqttClient                  = None
+    mqttRoot                    = "Battery"
 
+    _instance = None
 
-# --------------------------------------------------------------------------- # 
-# MQTT On Connect function
-# --------------------------------------------------------------------------- # 
-def on_connect(client, userdata, flags, rc):
-    global mqttConnected, mqttClient
-    if rc==0:
-        log.debug("MQTT connected OK Returned code={}".format(rc))
-        #subscribe to the commands
-        try:
-            topic = "{}/stat/#".format(argumentValues['mqttRoot'])
-            client.subscribe(topic)
-            log.debug("Subscribed to {}".format(topic))
-            topic = "{}/cmnd/#".format(argumentValues['mqttRoot'])
-            client.subscribe(topic)
-            log.debug("Subscribed to {}".format(topic))
-            topic = "{}/tele/#".format(argumentValues['mqttRoot'])
-            client.subscribe(topic)
-            log.debug("Subscribed to {}".format(topic))
-            mqttPublish("", "ping")
-        except Exception as e:
-            log.error("MQTT Subscribe failed")
-            log.exception(e, exc_info=True)
+    def on_connect(self, client, userdata, flags, rc):
+        global mqttClient
+        log.debug("on_connect")
+        if rc==0:
+            log.debug("MQTT connected OK Returned code={}".format(rc))
+            #subscribe to the commands
+            try:
+                topic = "{}/stat/#".format(mqttRoot)
+                client.subscribe(topic)
+                log.debug("Subscribed to {}".format(topic))
+                topic = "{}/cmnd/#".format(mqttRoot)
+                client.subscribe(topic)
+                log.debug("Subscribed to {}".format(topic))
+                topic = "{}/tele/#".format(mqttRoot)
+                client.subscribe(topic)
+                log.debug("Subscribed to {}".format(topic))
+                
+            except Exception as e:
+                log.error("MQTT Subscribe failed")
+                log.exception(e, exc_info=True)
+            self.mqttPublish("", "ping")
+        else:
+            log.error("MQTT Bad connection Returned code={}".format(rc))
 
-        mqttConnected = True
-    else:
-        mqttConnected = False
-        log.error("MQTT Bad connection Returned code={}".format(rc))
+    def on_disconnect(client, userdata, rc):
+        global mqttClient
+        log.debug("on_disconnect")
+        #if disconnetion was unexpectred (not a result of a disconnect request) then log it.
+        if rc!=mqttclient.MQTT_ERR_SUCCESS:
+            log.error("on_disconnect: Disconnected. ReasonCode={}".format(rc))
 
-# --------------------------------------------------------------------------- # 
-# MQTT On Disconnect
-# --------------------------------------------------------------------------- # 
-def on_disconnect(client, userdata, rc):
-    global mqttConnected, mqttClient
-    mqttConnected = False
-    #if disconnetion was unexpectred (not a result of a disconnect request) then log it.
-    if rc!=mqttclient.MQTT_ERR_SUCCESS:
-        log.debug("on_disconnect: Disconnected. ReasonCode={}".format(rc))
-
-# --------------------------------------------------------------------------- # 
-# MQTT Publish the data
-# --------------------------------------------------------------------------- # 
-def mqttPublish(data, subtopic):
-    global mqttConnected
-
-    topic = "{}/cmnd/{}".format(argumentValues['mqttRoot'], subtopic)
-    log.debug("Publishing: {} connected {} ".format(topic, mqttConnected))
-    
-    if mqttConnected:
+    def mqttPublish(self, data, subtopic):
+        topic = "{}/cmnd/{}".format(mqttRoot, subtopic)
+        log.debug("Publishing: {}".format(topic))
+        
         try:
             mqttClient.publish(topic, data)
             return True
         except Exception as e:
             log.error("MQTT Publish Error Topic:{}".format(topic))
             log.exception(e, exc_info=True)
-            mqttConnected = False
             return False
-    else:
-        client =  mqttclient.Client()
-        client.username_pw_set(argumentValues['mqttUser'], password=argumentValues['mqttPassword'])
-        if client.connect(host=argumentValues['mqttHost'], port=int(argumentValues['mqttPort'])) != 0:
-            log.error("Unable to connect to MQTT")
-        client.publish(topic, data)
-        client.disconnect()
         
-# --------------------------------------------------------------------------- # 
-# Main
-# --------------------------------------------------------------------------- # 
-def run(on_stat, on_tele, on_cmnd):
-
-    global mqttClient
+    def disconnect(self):
+        mqttClient.disconnect()
+        
     #setup the MQTT Client for publishing and subscribing
-    clientId = argumentValues['mqttUser'] + "_mqttclient_" + str(randint(100, 999))
-    mqttClient = mqttclient.Client(clientId) 
-    mqttClient.username_pw_set(argumentValues['mqttUser'], password=argumentValues['mqttPassword'])
-    mqttClient.on_connect = on_connect    
-    mqttClient.on_disconnect = on_disconnect  
-    mqttClient.message_callback_add("{}/stat/#".format(argumentValues['mqttRoot']), on_stat)
-    mqttClient.message_callback_add("{}/tele/#".format(argumentValues['mqttRoot']), on_tele)
-    mqttClient.message_callback_add("{}/cmnd/#".format(argumentValues['mqttRoot']), on_cmnd)
-    try:
-        log.info("Connecting to MQTT {}:{}".format(argumentValues['mqttHost'], argumentValues['mqttPort']))
-        mqttClient.connect(host=argumentValues['mqttHost'],port=int(argumentValues['mqttPort'])) 
-    except Exception as e:
-        log.error("Unable to connect to MQTT, exiting...")
-        sys.exit(2)
-    mqttClient.loop_start()
+    def init(self, on_stat = None, on_tele = None, on_cmnd = None):
+        global mqttClient, mqttRoot
+
+        clientId = current_app.config['MQTT_USER'] + "_mqttclient_" + str(randint(100, 999))
+        mqttClient = mqttclient.Client(clientId) 
+        mqttClient.username_pw_set(current_app.config['MQTT_USER'], password=current_app.config['MQTT_PASSWORD'])
+        if on_stat is not None:
+            mqttClient.on_connect = self.on_connect    
+            mqttClient.on_disconnect = self.on_disconnect  
+            mqttClient.message_callback_add("{}/stat/#".format(current_app.config['MQTT_ROOT']), on_stat)
+            mqttClient.message_callback_add("{}/tele/#".format(current_app.config['MQTT_ROOT']), on_tele)
+            mqttClient.message_callback_add("{}/cmnd/#".format(current_app.config['MQTT_ROOT']), on_cmnd)
+        try:
+            log.info("Connecting to MQTT {}:{}".format(current_app.config['MQTT_HOST'], current_app.config['MQTT_PORT']))
+            mqttClient.connect(host=current_app.config['MQTT_HOST'],port=int(current_app.config['MQTT_PORT'])) 
+        except Exception as e:
+            log.error("Unable to connect to MQTT, exiting...")
+            sys.exit(2)
+        mqttRoot = current_app.config['MQTT_ROOT']
+        mqttClient.loop_start()
+
+    @classmethod
+    def instance(cls, on_stat = None, on_tele = None, on_cmnd = None):
+        if cls._instance is None:
+            cls._instance = cls.__new__(cls)
+            cls._instance.init(on_stat, on_tele, on_cmnd)
+            # more init operation here
+        return cls._instance

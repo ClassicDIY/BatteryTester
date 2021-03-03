@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:latest
+FROM crawforc3/raspberrypi-uwsgi-nginx-flask:latest
 WORKDIR /BatteryTester
 ENV STATIC_URL /static
 ENV STATIC_PATH /BatteryTester/app/static

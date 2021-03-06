@@ -6,47 +6,33 @@ from flask import (
     redirect,
     render_template,
     jsonify,
-    session,
-    Config,
-    g
+    Config
 )
-from multiprocessing import Queue, Value
-import json
+
 from .settings import settings
 from .firmware import firmware
-from .mqtt import mqtt
+from .my_mqtt import theQueue, testers, my_mqtt
 from .logger import log
-from .message import Message
 
-# --------------------------------------------------------------------------- #
-# Sharing Data Between Processes Using multiprocessing Queue
-# --------------------------------------------------------------------------- #
-theQueue = Queue()
-testers = Value("i", 0)
-
+mqttClient = my_mqtt.instance()
 
 def create_app(config_class=Config):
     # create and configure the app
     app = Flask(__name__)
     if app.config["ENV"] == "production":
+        log.debug("************production************")
         app.config.from_object("config.ProductionConfig")
     else:
+        log.debug("************DevelopmentConfig************")
         app.config.from_object("config.DevelopmentConfig")
     app.register_blueprint(settings, url_prefix="")
     app.register_blueprint(firmware, url_prefix="")
-
     print(app.config)
-    with app.app_context():
-        init_mqtt()
-    # @app.teardown_appcontext
-    # def teardown_mqtt(exception):
-    #     log.debug("************teardown_mqtt************")
-    #     mqtt = g.pop('mqtt', None)
-    #     if mqtt is not None:
-    #         mqtt.disconnect()
+    mqttClient.init_app(app)
+    
+
     @app.route("/")
     def render_index():
-        session["testers"] = testers.value
         return render_template(
             "index.html", operation="Monitor", cellCount=testers.value * 2
         )
@@ -54,15 +40,13 @@ def create_app(config_class=Config):
     @app.route("/refresh")
     def render_refresh():
         testers.value = 0
-        con = mqtt.instance()
-        con.mqttPublish("", "ping")
+        mqttClient.publish("ping", "")
         return redirect(url_for("render_index"))
 
     @app.route("/operation", methods=["POST"])
     def operation():
         current_operation = request.form.get("operation")
-        con = mqtt.instance()
-        con.mqttPublish(current_operation, "operation")
+        mqttClient.publish("operation", current_operation)
         return jsonify(status="success")
 
     @app.route("/listen")
@@ -76,52 +60,3 @@ def create_app(config_class=Config):
         return Response(respond_to_client(), mimetype="text/event-stream")
 
     return app
-
-
-# --------------------------------------------------------------------------- #
-# MQTT On Message
-# --------------------------------------------------------------------------- #
-
-
-def on_stat(client, userdata, message):
-
-    global theQueue
-    msg = message.payload.decode(encoding="UTF-8")
-    log.debug("Received STAT  {} : {}".format(message.topic, msg))
-    if "monitor" in message.topic:
-        theMessage = Message("monitor", json.dumps(json.loads(msg)))
-        theQueue.put(theMessage)
-    elif "mode" in message.topic:
-        theMessage = Message("mode", json.dumps(json.loads(msg)))
-        theQueue.put(theMessage)
-    elif "result" in message.topic:
-        theMessage = Message("result", json.dumps(json.loads(msg)))
-        theQueue.put(theMessage)
-
-
-def on_tele(client, userdata, message):
-    global testers
-    msg = message.payload.decode(encoding="UTF-8").upper()
-    log.debug("Received TELE  {} : {}".format(message.topic, msg))
-    if "ping" in message.topic:
-        pl = json.loads(msg)
-        tester = int(pl["TESTERNUMBER"])
-        if tester > testers.value:
-            testers.value = tester
-        log.debug("cellCount at on_tele  {} ".format(testers.value))
-
-
-def on_cmnd(client, userdata, message):
-    global theQueue
-    msg = message.payload.decode(encoding="UTF-8")
-    log.debug("Received CMND  {} : {}".format(message.topic, msg))
-    if "operation" in message.topic:
-        theMessage = Message("operation", msg)
-        theQueue.put(theMessage)
-
-
-def init_mqtt():
-    testers.value = 0
-    con = mqtt.instance(on_stat, on_tele, on_cmnd)
-    log.info("************BatteryTester init_mqtt()*********")
-

@@ -3,7 +3,9 @@ version: "3"
 services:
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-pi
     container_name: battery_tester
     restart: unless-stopped
     # volumes:
@@ -12,7 +14,7 @@ services:
       - "80:80"
     environment:
       - APP_NAME=BatteryTester
-    #   - FLASK_APP=main.py
-    #   - FLASK_DEBUG=1
-    #   - 'RUN=flask run --host=0.0.0.0 --port=80'
-    # command: flask run --host=0.0.0.0 --port=80
+      - FLASK_APP=main.py
+      # - FLASK_DEBUG=1
+      # - 'RUN=flask run --host=0.0.0.0 --port=80'
+    command: flask run --host=0.0.0.0 --port=80

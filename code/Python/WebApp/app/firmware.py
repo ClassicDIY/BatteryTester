@@ -7,15 +7,14 @@ from flask import (
     flash,
     send_file,
     jsonify,
-    session,
-    g,
     current_app
 )
-from .mqtt import mqtt
+from .my_mqtt import testers, my_mqtt
 from werkzeug.utils import secure_filename
 import os
 import json
-import socket
+
+mqttClient = my_mqtt.instance()
 
 firmware = Blueprint(
     "firmware", __name__, static_folder="static", template_folder="templates"
@@ -23,8 +22,7 @@ firmware = Blueprint(
 
 @firmware.route("/update_firmware")
 def firmware_page():
-    global testers
-    return render_template("firmware.html", devices = session["testers"])
+    return render_template("firmware.html", devices = testers.value)
 
 
 @firmware.route("/publishOta", methods=["POST"])
@@ -32,8 +30,7 @@ def operation():
     data = {}
     data["ServerUrl"] = "http://" + os.getenv("HostName", "localhost") + "/firmware"
     json_data = json.dumps(data)
-    con = mqtt.instance()
-    con.mqttPublish(json_data,"5/flash")
+    mqttClient.publish("5/flash", json_data)
     return jsonify(status="success")
 
 
@@ -67,7 +64,7 @@ def upload_firmware():
                 )
             )
             print("Image Saved")
-    return render_template("firmware.html")
+    return redirect(url_for("firmware.firmware_page"))
 
 
 @firmware.route("/firmware")

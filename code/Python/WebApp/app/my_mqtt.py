@@ -35,7 +35,6 @@ class my_mqtt:
         mqtt.subscribe("{}/cmnd/#".format(mqttRoot))
 
     def publish(self, subtopic, data):
-        log.debug("here**********")
         topic = "{}/cmnd/{}".format(mqttRoot, subtopic)
         log.debug("Publishing: {} ".format(topic))
         
@@ -76,7 +75,9 @@ class my_mqtt:
             tester = int(pl["TESTERNUMBER"])
             if tester > testers.value:
                 testers.value = tester
-            log.debug("cellCount at on_tele  {} ".format(testers.value))
+                log.debug("Highest Tester number  {} ".format(testers.value))
+            theMessage = Message("ping", json.dumps(pl))
+            theQueue.put(theMessage)
 
     @mqtt.on_topic("{}/cmnd/#".format(mqttRoot))
     def handle_cmnd(client, userdata, message):

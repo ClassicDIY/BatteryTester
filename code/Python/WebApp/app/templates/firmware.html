@@ -5,24 +5,18 @@
 <div class="container">
     <div class="row">
         <div class="col">
+            <h1>Upload firmware</h1>
+            <hr>
+            <form action="/upload-firmware" method="POST" enctype="multipart/form-data">
 
-        <h1>Upload an image</h1>
-        <hr>
-
-        <form action="/upload-firmware" method="POST" enctype="multipart/form-data">
-
-            <div class="form-group">
-            <label>Select image</label>
-            <div class="custom-file">
-                <input type="file" class="custom-file-input" name="image" id="image" accept=".bin">
-                <label class="custom-file-label" for="image">Select firmware.bin file</label>
-            </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Upload</button>
-
-        </form>
-            <button type="button" id="publishOta" class="btn btn-primary">Publish</button>
+                <div class="form-group">
+                <label>Select the firmware.bin file for the ESP32</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="firmware" id="firmware" accept=".bin">
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+                </div>
+            </form>
         </div>
         <div class="row">
             <table class="table">
@@ -38,9 +32,9 @@
                     {% for n in range(0, devices) %}
                     <tr>
                         <td id="tester{{n}}"> {{n+1}} </td>
-                        <td id="address{{n}}"> </td>
+                        <td ><a href="" id="ip{{n}}" class="btn btn-link" target="_blank" rel="noopener noreferrer">Link</a> </td>
                         <td id="version{{n}}"> - </td>
-                        <td> <button type="button" id="flash{{n}}" class="btn btn-primary">Publish</button> </td>
+                        <td> <button type="button" id="flash{{n}}" value="{{n+1}}" class="flash btn btn-primary">Publish</button> </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -52,17 +46,28 @@
 {% block script%}
 <script type="text/javascript">
     $(document).ready(function () {
-        $("#publishOta").on("click", function(e){
+        $(".flash").on("click", function(e){
             $.ajax({
-                type: "POST",
-                url: "/publishOta",
-                data: {operation: e.target.innerHTML},
-                dataType: "text",
-                // success: function(data){
-                //             alert("Operation "+ operation.toString());
-                //         }
-        });
-      });
+                type : 'POST',
+                url : "/publishOta",
+                data : {'data':e.target.value}
+            });
+        });     
     });
 </script>
+
+<script>
+    var eventSource = new EventSource("/listen")
+
+    eventSource.addEventListener("ping", function(e) {
+
+        data = JSON.parse(e.data)
+        if ('TESTERNUMBER' in data) {
+            document.querySelector("#ip"+(data.TESTERNUMBER-1)).innerText = data.IP;
+            document.querySelector("#ip"+(data.TESTERNUMBER-1)).setAttribute('href', "http://" +  data.IP);
+            document.querySelector("#version"+(data.TESTERNUMBER-1)).innerText = data.VERSION;
+        }
+    }, false)
+</script>
+
 {% endblock %}

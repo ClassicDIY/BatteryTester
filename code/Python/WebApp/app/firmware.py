@@ -1,6 +1,7 @@
 from flask import (
     Blueprint,
     request,
+    Response,
     redirect,
     render_template,
     url_for,
@@ -9,10 +10,11 @@ from flask import (
     jsonify,
     current_app
 )
-from .my_mqtt import testers, my_mqtt
+from .my_mqtt import testers, theQueue, my_mqtt
 from werkzeug.utils import secure_filename
 import os
 import json
+from .logger import log
 
 mqttClient = my_mqtt.instance()
 
@@ -22,15 +24,17 @@ firmware = Blueprint(
 
 @firmware.route("/update_firmware")
 def firmware_page():
+    mqttClient.publish("ping", "")
     return render_template("firmware.html", devices = testers.value)
 
 
 @firmware.route("/publishOta", methods=["POST"])
 def operation():
+    tester=request.form['data']
     data = {}
     data["ServerUrl"] = "http://" + os.getenv("HostName", "localhost") + "/firmware"
     json_data = json.dumps(data)
-    mqttClient.publish("5/flash", json_data)
+    mqttClient.publish(tester + "/flash", json_data)
     return jsonify(status="success")
 
 
@@ -50,7 +54,7 @@ def upload_firmware():
         # check if the post request has the file part
         if "image" not in request.files:
             flash("No file part")
-        image = request.files["image"]
+        image = request.files["firmware"]
         # if user does not select file, browser also submit an empty part without filename
         if image.filename == "":
             flash("No selected file")
@@ -79,3 +83,14 @@ def download_firmware():
         )
     else:
         firmware.errorhandler(404)
+
+
+@firmware.route("/listen")
+def listen():
+    def respond_to_client():
+        global theQueue
+        while not theQueue.empty():
+            theMessage = theQueue.get()
+            yield f"data: {theMessage.data}\nevent: {theMessage.topic}\n\n"
+
+    return Response(respond_to_client(), mimetype="text/event-stream")

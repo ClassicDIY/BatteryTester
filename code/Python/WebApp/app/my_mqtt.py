@@ -78,6 +78,13 @@ class my_mqtt:
                 log.debug("Highest Tester number  {} ".format(testers.value))
             theMessage = Message("ping", json.dumps(pl))
             theQueue.put(theMessage)
+        elif "LWT" in message.topic:
+            num = message.topic.split('/')[2]
+            data = {}
+            data["TESTERNUMBER"] = int(num)
+            data["STATE"] = msg
+            theMessage = Message("LWT", json.dumps(data))
+            theQueue.put(theMessage)
 
     @mqtt.on_topic("{}/cmnd/#".format(mqttRoot))
     def handle_cmnd(client, userdata, message):

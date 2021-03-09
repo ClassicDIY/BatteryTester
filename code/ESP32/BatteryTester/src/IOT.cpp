@@ -7,34 +7,7 @@
 
 extern BatteryTester::Tester _tester1;
 extern BatteryTester::Tester _tester2;
-
-static const char *server_certificate = "-----BEGIN CERTIFICATE-----\n"
-										"MIIEkjCCA3qgAwIBAgIQCgFBQgAAAVOFc2oLheynCDANBgkqhkiG9w0BAQsFADA/\n"
-										"MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT\n"
-										"DkRTVCBSb290IENBIFgzMB4XDTE2MDMxNzE2NDA0NloXDTIxMDMxNzE2NDA0Nlow\n"
-										"SjELMAkGA1UEBhMCVVMxFjAUBgNVBAoTDUxldCdzIEVuY3J5cHQxIzAhBgNVBAMT\n"
-										"GkxldCdzIEVuY3J5cHQgQXV0aG9yaXR5IFgzMIIBIjANBgkqhkiG9w0BAQEFAAOC\n"
-										"AQ8AMIIBCgKCAQEAnNMM8FrlLke3cl03g7NoYzDq1zUmGSXhvb418XCSL7e4S0EF\n"
-										"q6meNQhY7LEqxGiHC6PjdeTm86dicbp5gWAf15Gan/PQeGdxyGkOlZHP/uaZ6WA8\n"
-										"SMx+yk13EiSdRxta67nsHjcAHJyse6cF6s5K671B5TaYucv9bTyWaN8jKkKQDIZ0\n"
-										"Z8h/pZq4UmEUEz9l6YKHy9v6Dlb2honzhT+Xhq+w3Brvaw2VFn3EK6BlspkENnWA\n"
-										"a6xK8xuQSXgvopZPKiAlKQTGdMDQMc2PMTiVFrqoM7hD8bEfwzB/onkxEz0tNvjj\n"
-										"/PIzark5McWvxI0NHWQWM6r6hCm21AvA2H3DkwIDAQABo4IBfTCCAXkwEgYDVR0T\n"
-										"AQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAYYwfwYIKwYBBQUHAQEEczBxMDIG\n"
-										"CCsGAQUFBzABhiZodHRwOi8vaXNyZy50cnVzdGlkLm9jc3AuaWRlbnRydXN0LmNv\n"
-										"bTA7BggrBgEFBQcwAoYvaHR0cDovL2FwcHMuaWRlbnRydXN0LmNvbS9yb290cy9k\n"
-										"c3Ryb290Y2F4My5wN2MwHwYDVR0jBBgwFoAUxKexpHsscfrb4UuQdf/EFWCFiRAw\n"
-										"VAYDVR0gBE0wSzAIBgZngQwBAgEwPwYLKwYBBAGC3xMBAQEwMDAuBggrBgEFBQcC\n"
-										"ARYiaHR0cDovL2Nwcy5yb290LXgxLmxldHNlbmNyeXB0Lm9yZzA8BgNVHR8ENTAz\n"
-										"MDGgL6AthitodHRwOi8vY3JsLmlkZW50cnVzdC5jb20vRFNUUk9PVENBWDNDUkwu\n"
-										"Y3JsMB0GA1UdDgQWBBSoSmpjBH3duubRObemRWXv86jsoTANBgkqhkiG9w0BAQsF\n"
-										"AAOCAQEA3TPXEfNjWDjdGBX7CVW+dla5cEilaUcne8IkCJLxWh9KEik3JHRRHGJo\n"
-										"uM2VcGfl96S8TihRzZvoroed6ti6WqEBmtzw3Wodatg+VyOeph4EYpr/1wXKtx8/\n"
-										"wApIvJSwtmVi4MFU5aMqrSDE6ea73Mj2tcMyo5jMd6jmeWUHK8so/joWUoHOUgwu\n"
-										"X4Po1QYz+3dszkDqMp4fklxBwXRsW10KXzPMTZ+sOPAveyxindmjkW8lGy+QsRlG\n"
-										"PfZ+G6Z6h7mjem0Y+iWlkYcV4PIWL1iwBi8saCbGS5jN2p8M+X+Q7UNKEkROb3N6\n"
-										"KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==\n"
-										"-----END CERTIFICATE-----";
+extern void doOTA(char *otaURL);
 
 namespace BatteryTester
 {
@@ -62,6 +35,28 @@ namespace BatteryTester
 	const char *ntpServer = "pool.ntp.org";
 	char _otaUrl[STR_LEN];
 
+	void doPing()
+	{
+		char buf[MaxMQTTTopic];
+		String s;
+		sprintf(buf, "%s/tele/%s/ping", _mqttRootTopic, _mqttTesterNumber);
+		_JSdoc.clear();
+		_JSdoc["IP"] = WiFi.localIP().toString().c_str();
+		_JSdoc["Version"] = CONFIG_VERSION;
+		_JSdoc["TesterNumber"] = _mqttTesterNumber;
+		StaticJsonDocument<MaxMQTTPayload> config;
+		config["LowCutoff"] = _config.getLowCutoff();
+		config["ThermalShutdownTemperature"] = _config.getThermalShutdownTemperature();
+		config["StorageVoltage"] = _config.getStorageVoltage();
+		config["StabilizeDuration"] = _config.getStabilizeDuration();
+		config["ChargeCurrent"] = _config.getChargeCurrent();
+		config["ChargeDischargeCycleCount"] = _config.getChargeDischargeCycleCount();
+		_JSdoc["Config"] = config;
+		serializeJson(_JSdoc, s);
+		_mqttClient.publish(buf, 0, false, s.c_str());
+		_mqttClient.publish(_willTopic, 0, false, "Online");
+	}
+
 	void onMqttConnect(bool sessionPresent)
 	{
 		logd("Connected to MQTT. Session present: %d", sessionPresent);
@@ -81,7 +76,7 @@ namespace BatteryTester
 		sprintf(mqttCmndTopic, "%s/cmnd/%s/%s", _mqttRootTopic, _mqttTesterNumber, Subtopics[Subtopic::flash]);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
-		_mqttClient.publish(_willTopic, 0, false, "Online");
+		doPing();
 		_tester1.setState(Standby);
 		_tester2.setState(Standby);
 	}
@@ -130,33 +125,6 @@ namespace BatteryTester
 		}
 	}
 
-	void HttpEvent(HttpEvent_t *event)
-	{
-		switch (event->event_id)
-		{
-		case HTTP_EVENT_ERROR:
-			logd("Http Event Error");
-			break;
-		case HTTP_EVENT_ON_CONNECTED:
-			logd("Http Event On Connected");
-			break;
-		case HTTP_EVENT_HEADER_SENT:
-			logd("Http Event Header Sent");
-			break;
-		case HTTP_EVENT_ON_HEADER:
-			logd("Http Event On Header, key=%s, value=%s\n", event->header_key, event->header_value);
-			break;
-		case HTTP_EVENT_ON_DATA:
-			break;
-		case HTTP_EVENT_ON_FINISH:
-			logd("Http Event On Finish");
-			break;
-		case HTTP_EVENT_DISCONNECTED:
-			logd("Http Event Disconnected");
-			break;
-		}
-	}
-
 	void onMqttPublish(uint16_t packetId)
 	{
 		logd("Publish acknowledged.  packetId: %d", packetId);
@@ -178,15 +146,7 @@ namespace BatteryTester
 			logd("Payload: %s", buf);
 			if (strcmp(subtopic, Subtopics[Subtopic::ping]) == 0) // ping telemetry response with IP address
 			{
-				char buf[MaxMQTTTopic];
-				String s;
-				sprintf(buf, "%s/tele/%s/ping", _mqttRootTopic, _mqttTesterNumber);
-				_JSdoc.clear();
-				_JSdoc["IP"] = WiFi.localIP().toString().c_str();
-				_JSdoc["Version"] = CONFIG_VERSION;
-				_JSdoc["TesterNumber"] = _mqttTesterNumber;
-				serializeJson(_JSdoc, s);
-				_mqttClient.publish(buf, 0, false, s.c_str());
+				doPing();
 			}
 			else if (strcmp(subtopic, Subtopics[Subtopic::operation]) == 0) // mode of operation
 			{
@@ -288,10 +248,8 @@ namespace BatteryTester
 				{
 					if (_JSdoc.containsKey("ServerUrl"))
 					{
-						HttpsOTA.onHttpEvent(HttpEvent);
 						strncpy(_otaUrl, _JSdoc["ServerUrl"], STR_LEN);
-						logd("Starting OTA from %s", _otaUrl);
-						HttpsOTA.begin((const char*)_otaUrl, server_certificate);
+						doOTA(_otaUrl);
 					}
 				}
 			}
@@ -444,19 +402,6 @@ namespace BatteryTester
 			else
 			{
 				Serial.read(); // discard data
-			}
-		}
-		else
-		{
-			HttpsOTAStatus_t otastatus = HttpsOTA.status();
-			if (otastatus == HTTPS_OTA_SUCCESS)
-			{
-				logd("Firmware written successfully. Rebooting...");
-				ESP.restart();
-			}
-			else if (otastatus == HTTPS_OTA_FAIL)
-			{
-				logd("Firmware Upgrade Fail");
 			}
 		}
 	}

@@ -6,20 +6,127 @@
     <div class="row">
         <div class="col">
 
-        <h1>Configuration</h1>
-        <hr>
+            <h1>Configuration</h1>
+            <hr>
+            <div class="col-md-4 offset-md-4">
+                <form action="/configure" method="POST"
+                    enctype="multipart/form-data">
 
-        <form action="/configure" method="POST">
+                    <div class="form-group">
+                        <label for="CutoffVoltageInput" class="form-label">Low voltage
+                            cutoff: </label>
+                            <output id="CutoffVoltageOutput"></output><label>&nbsp mV</label>
+                        <input type="range" class="form-range" min="2500"
+                            max="3200" step="50" id="CutoffVoltageInput" name="LowCutoff">
+                    </div>
 
-            <div class="form-group">
-            <label>Dummy</label>
+                    <div class="form-group">
+                        <label for="ThermalShutdownTemperatureInput" class="form-label">Thermal Shutdown Temperature: </label>
+                            <output id="ThermalShutdownTemperatureOutput"></output><label>&nbsp &deg;C</label>
+                        <input type="range" class="form-range" min="40"
+                            max="100" step="5" id="ThermalShutdownTemperatureInput" name="ThermalShutdownTemperature">
+                    </div>
+                    <div class="form-group">
+                        <label for="StorageVoltageInput" class="form-label">Storage Voltage: </label>
+                            <output id="StorageVoltageOutput"></output><label>&nbsp mV</label>
+                        <input type="range" class="form-range" min="3200"
+                            max="4000" step="50" id="StorageVoltageInput" name="StorageVoltage">
+                    </div>
+                    <div class="form-group">
+                        <label for="StabilizeDurationInput" class="form-label">Stabilize Duration : </label>
+                            <output id="StabilizeDurationOutput"></output><label>&nbsp S</label>
+                        <input type="range" class="form-range" min="10"
+                            max="100" step="5" id="StabilizeDurationInput" name="StabilizeDuration">
+                    </div>
+                    <div class="form-group">
+                        <label for="ChargeCurrentInput" class="form-label">Charge Current: </label>
+                            <output id="ChargeCurrentOutput"></output><label>&nbsp mA</label>
+                        <input type="range" class="form-range" min="0"
+                            max="3" step="1" id="ChargeCurrentInput" name="ChargeCurrent">
+                    </div>
+                    <div class="form-group">
+                        <label for="ChargeDischargeCycleCountInput" class="form-label">Charge Discharge Cycle Count: </label>
+                            <output id="ChargeDischargeCycleCountOutput"></output>
+                        <input type="range" class="form-range" min="1"
+                            max="10" step="1" id="ChargeDischargeCycleCountInput" name="ChargeDischargeCycleCount">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Apply</button>
 
+                </form>
             </div>
-
-            <button type="submit" class="btn btn-primary">Apply</button>
-
-        </form>
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block script%}
+<script type="text/javascript">
+    // 0:100 mA 1:400 mA 2: 700mA 3:1000 mA
+    var current = {"0":"100","1":"400","2":"700","3":"1000"}
+    let i = document.querySelector('#CutoffVoltageInput'),
+    o = document.querySelector('#CutoffVoltageOutput');
+    o.innerHTML = i.value;
+    i.addEventListener('input', function () {o.innerHTML = i.value;}, false);
+
+    let i1 = document.querySelector('#ThermalShutdownTemperatureInput'),
+    o1 = document.querySelector('#ThermalShutdownTemperatureOutput');
+    o1.innerHTML = i1.value;
+    i1.addEventListener('input', function () {o1.innerHTML = i1.value;}, false);
+
+    let i2 = document.querySelector('#StorageVoltageInput'),
+    o2 = document.querySelector('#StorageVoltageOutput');
+    o2.innerHTML = i2.value;
+    i2.addEventListener('input', function () {o2.innerHTML = i2.value;}, false);
+
+    let i3 = document.querySelector('#StabilizeDurationInput'),
+    o3 = document.querySelector('#StabilizeDurationOutput');
+    o3.innerHTML = i3.value;
+    i3.addEventListener('input', function () {o3.innerHTML = i3.value;}, false);
+
+    let i4 = document.querySelector('#ChargeCurrentInput'),
+    o4 = document.querySelector('#ChargeCurrentOutput');
+    o4.innerHTML = current[i4.value];
+    i4.addEventListener('input', function () {o4.innerHTML = current[i4.value];}, false);
+
+    let i5 = document.querySelector('#ChargeDischargeCycleCountInput'),
+    o5 = document.querySelector('#ChargeDischargeCycleCountOutput');
+    o5.innerHTML = i5.value;
+    i5.addEventListener('input', function () {o5.innerHTML = i5.value;}, false);
+
+
+    var eventSource = new EventSource("/listen")
+    
+    eventSource.addEventListener("ping", function(e) {
+
+        data = JSON.parse(e.data)
+         if ('CONFIG' in data) {
+            console.log(data.CONFIG.LOWCUTOFF)
+            document.getElementById("CutoffVoltageInput").value = data.CONFIG.LOWCUTOFF;
+            document.getElementById("CutoffVoltageOutput").value = data.CONFIG.LOWCUTOFF;
+
+            document.getElementById("ThermalShutdownTemperatureInput").value = data.CONFIG.THERMALSHUTDOWNTEMPERATURE/10;
+            document.getElementById("ThermalShutdownTemperatureOutput").value = data.CONFIG.THERMALSHUTDOWNTEMPERATURE/10;
+
+            document.getElementById("StorageVoltageInput").value = data.CONFIG.STORAGEVOLTAGE;
+            document.getElementById("StorageVoltageOutput").value = data.CONFIG.STORAGEVOLTAGE;
+
+            document.getElementById("StabilizeDurationInput").value = data.CONFIG.STABILIZEDURATION;
+            document.getElementById("StabilizeDurationOutput").value = data.CONFIG.STABILIZEDURATION;
+
+            document.getElementById("ChargeCurrentInput").value = data.CONFIG.CHARGECURRENT;
+            document.getElementById("ChargeCurrentOutput").value = current[data.CONFIG.CHARGECURRENT];
+
+            document.getElementById("ChargeDischargeCycleCountInput").value = data.CONFIG.CHARGEDISCHARGECYCLECOUNT;
+            document.getElementById("ChargeDischargeCycleCountOutput").value = data.CONFIG.CHARGEDISCHARGECYCLECOUNT;
+
+        }
+    }, false)
+</script>
+{% endblock %}
+
+<!-- "LowCutoff":2800,
+"ThermalShutdownTemperature":700,
+"StorageVoltage":3600,
+"StabilizeDuration":20,
+"ChargeCurrent":2,
+"ChargeDischargeCycleCount":5 -->

@@ -52,22 +52,22 @@ def allowed_file(filename):
 def upload_firmware():
     if request.method == "POST":
         # check if the post request has the file part
-        if "image" not in request.files:
+        if "firmware" not in request.files:
             flash("No file part")
-        image = request.files["firmware"]
+        firmware = request.files["firmware"]
         # if user does not select file, browser also submit an empty part without filename
-        if image.filename == "":
+        if firmware.filename == "":
             flash("No selected file")
-        if image and allowed_file(image.filename):
-            filename = secure_filename(image.filename)
-            image.save(
+        if firmware and allowed_file(firmware.filename):
+            filename = secure_filename(firmware.filename)
+            firmware.save(
                 os.path.join(
                     current_app.root_path,
                     current_app.config["FIRMWARE_UPLOADS"],
-                    image.filename,
+                    firmware.filename,
                 )
             )
-            print("Image Saved")
+            print("Firmware Saved")
     return redirect(url_for("firmware.firmware_page"))
 
 

@@ -25,6 +25,7 @@ namespace BatteryTester
 		void Setup(ThreadController *controller);
 		void Perform(Operation op);
 		void PublishOutcome();
+		void PublishUpdate();
 		void setState(State state);
 		void run();
 		Battery *pBattery() { return _pBattery; }

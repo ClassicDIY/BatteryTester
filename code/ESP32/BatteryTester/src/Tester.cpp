@@ -210,7 +210,19 @@ namespace BatteryTester
 		}
 	}
 
-	void Tester::MQTTMonitor()
+	void Tester::PublishUpdate()
+	{
+		uint16_t temp = _pBattery->Temperature();
+		StaticJsonDocument<MaxMQTTPayload> doc;
+		uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
+		doc[Elements[Id::state]] = States[_state];
+		doc[Elements[Id::voltage]] = _pBattery->Voltage();
+		doc[Elements[Id::current]] = current;
+		doc[Elements[Id::temperature]] = temp;
+		_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
+	}
+
+		void Tester::MQTTMonitor()
 	{
 		_modulo++;
 		_modulo %= 10;

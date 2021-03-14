@@ -29,8 +29,8 @@ namespace BatteryTester
 		pinMode(_chargeCurrent2k, OUTPUT);
 		pinMode(_dischargeLed, OUTPUT);
 		pinMode(_tp4056Standby, INPUT);
-		ledcSetup(PWMChannel, PWMfrequency, PWMResolution); //PWM setup
-		ledcAttachPin(gatePin, PWMChannel);
+		ledcSetup(_batteryPosition, PWMfrequency, PWMResolution); //PWM setup, use channel 0 or 1 equal to the battery position
+		ledcAttachPin(gatePin, _batteryPosition);
 		TP4056_Off();
 		Load_Off();
 		DischargeLed_Off();
@@ -219,26 +219,17 @@ namespace BatteryTester
 		doc[Elements[Id::voltage]] = _pBattery->Voltage();
 		doc[Elements[Id::current]] = current;
 		doc[Elements[Id::temperature]] = temp;
+		doc[Elements[Id::stage]] = _currentStage;
 		_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
 	}
 
-		void Tester::MQTTMonitor()
+	void Tester::MQTTMonitor()
 	{
 		_modulo++;
 		_modulo %= 10;
 		if (_modulo == 0)
 		{
-			uint16_t temp = _pBattery->Temperature();
-			// if (temp < 1000) // skip bad MCP9808 readings?
-			// {
-			StaticJsonDocument<MaxMQTTPayload> doc;
-			uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
-			doc[Elements[Id::state]] = States[_state];
-			doc[Elements[Id::voltage]] = _pBattery->Voltage();
-			doc[Elements[Id::current]] = current;
-			doc[Elements[Id::temperature]] = temp;
-			_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
-			// }
+			PublishUpdate();
 		}
 	}
 
@@ -359,7 +350,7 @@ namespace BatteryTester
 			_pBattery->enabled = false;
 			Load_Off();
 			uint16_t voc = _pBattery->OpenVoltage();
-			ledcWrite(PWMChannel, 255); // full load
+			ledcWrite(_batteryPosition, 255); // full load
 			delay(200);
 			_pBattery->MMA();
 			uint32_t iMax = _pBattery->DischargeCurrent();
@@ -499,12 +490,12 @@ namespace BatteryTester
 
 	void Tester::Load_Off()
 	{
-		ledcWrite(PWMChannel, 0);
+		ledcWrite(_batteryPosition, 0);
 	}
 
 	void Tester::Load_On()
 	{
-		ledcWrite(PWMChannel, _dutyCycle);
+		ledcWrite(_batteryPosition, _dutyCycle);
 	}
 
 	void Tester::DischargeLed_Off()

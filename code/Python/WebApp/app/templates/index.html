@@ -51,7 +51,7 @@
 
         eventSource.addEventListener("monitor", function(e) {
             data = JSON.parse(e.data)
-            document.querySelector("#stage"+data.index).innerText = data.state;
+            document.querySelector("#stage"+data.index).innerText = data.state + "(" + data.stage + ")";
             if ('voltage' in data) {
                 document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
             }
@@ -80,7 +80,7 @@
         eventSource.addEventListener("result", function(e) {
             data = JSON.parse(e.data)
             console.log(data)
-            document.querySelector("#stage"+data.index).innerText = data.state;
+            document.querySelector("#stage"+data.index).innerText = data.state + "(" + data.stage + ")";
             if ('voltage' in data) {
                 document.querySelector("#voltage"+data.index).innerText = data.voltage + ' mV';
             }

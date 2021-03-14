@@ -54,9 +54,10 @@ namespace BatteryTester
 		cycle,
 		current,
 		temperature,
-		internalResistance
+		internalResistance,
+		stage
 	};
-	static const char * const Elements[] = {"index", "cell", "state", "capacity", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance"};
+	static const char * const Elements[] = {"index", "cell", "state", "capacity", "maxTemperature", "duration", "voltage", "cycle", "current", "temperature", "internalResistance", "stage"};
 
 	enum Subtopic
 	{

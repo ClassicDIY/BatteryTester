@@ -9,7 +9,6 @@
 #define StorageVoltage 3700 // factory default storage voltage
 #define ThermalShutdownTemperature 450 // Thermal shutdown factory setting
 #define PWMfrequency 1000000 // discharger frequency
-#define PWMChannel 0
 #define PWMResolution 8 // duty cycle 0 -> 255
 #define MaxMQTTPayload 2048
 #define MaxMQTTTopic 255

@@ -104,9 +104,17 @@ namespace BatteryTester
 	// °C * 10
 	uint16_t Battery::Temperature()
 	{
-		_tempsensor.wake();
-		float c = _tempsensor.readTempC();
-		return c * 10; // °C X 10 as uint16
+		try
+		{
+			_tempsensor.wake();
+			float c = _tempsensor.readTempC();
+			return c * 10; // °C X 10 as uint16
+		}
+		catch  (const std::exception& ex)
+		{
+			loge("Exception from MCP9808: %s", ex.what());
+		}
+
 	}
 
 	void Battery::run()

@@ -70,7 +70,7 @@ namespace BatteryTester
 		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::ping]);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
-		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::monitor]);
+		sprintf(mqttCmndTopic, "%s/cmnd/%s", _mqttRootTopic, Subtopics[Subtopic::update]);
 		packetIdSub = _mqttClient.subscribe(mqttCmndTopic, 1);
 		logd("MQTT subscribing to: %s", mqttCmndTopic);
 		sprintf(mqttCmndTopic, "%s/cmnd/%s/%s", _mqttRootTopic, _mqttTesterNumber, Subtopics[Subtopic::flash]);
@@ -186,7 +186,7 @@ namespace BatteryTester
 				_tester1.Perform(op);
 				_tester2.Perform(op);
 			}
-			else if (strcmp(subtopic, Subtopics[Subtopic::monitor]) == 0)
+			else if (strcmp(subtopic, Subtopics[Subtopic::update]) == 0)
 			{
 				_tester1.PublishUpdate();
 				_tester2.PublishUpdate();

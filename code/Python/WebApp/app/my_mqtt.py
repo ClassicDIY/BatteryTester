@@ -55,8 +55,8 @@ class my_mqtt:
         global theQueue
         msg = message.payload.decode(encoding="UTF-8")
         log.debug("Received STAT  {} : {}".format(message.topic, msg))
-        if "monitor" in message.topic:
-            theMessage = Message("monitor", json.dumps(json.loads(msg)))
+        if "update" in message.topic:
+            theMessage = Message("update", json.dumps(json.loads(msg)))
             theQueue.put(theMessage)
         elif "mode" in message.topic:
             theMessage = Message("mode", json.dumps(json.loads(msg)))

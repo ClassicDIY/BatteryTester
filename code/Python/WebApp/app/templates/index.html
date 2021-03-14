@@ -51,7 +51,7 @@
 
         var colours = {"Standby":"#bfbf0a","NoBatteryFound":"#7d807f","Monitor":"#1229c4","Stabilize":"#a912c4", "InternalResistance":"#c44d12","FullCharge":"#2fff05","Discharge":"#bf0a0a","StorageCharge":"#bf7a0a","ThermalShutdown":"#bf0a68","Complete":"#646b66"} 
 
-        eventSource.addEventListener("monitor", function(e) {
+        eventSource.addEventListener("update", function(e) {
             data = JSON.parse(e.data)
             document.querySelector("#stage"+data.index).innerText = data.state + "(" + data.stage + ")";
             if ('voltage' in data) {

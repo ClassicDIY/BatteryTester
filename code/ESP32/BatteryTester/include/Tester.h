@@ -54,7 +54,7 @@ namespace BatteryTester
 		Operation _operation = noop;
 		State _state = Unspecified; // current state of operation 
 		int _currentStage; // index of the current state of execution
-		State* _currentFunction = 0;
+		State* _currentOperationArray = 0;
 		uint8_t _cycleCount = 0;
 
 		// the following variables are used to produce the outcome after multiple charge/discharge cycles

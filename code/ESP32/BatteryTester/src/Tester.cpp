@@ -60,28 +60,28 @@ namespace BatteryTester
 		{
 		case TestCycleOperation:
 			_cycleCount = _config.getChargeDischargeCycleCount();
-			_currentFunction = TestCycleSequence;
+			_currentOperationArray = TestCycleSequence;
 			break;
 		case ChargeOperation:
-			_currentFunction = ChargeSequence;
+			_currentOperationArray = ChargeSequence;
 			break;
 		case TestAndStoreOperation:
-			_currentFunction = TestAndStoreSequence;
+			_currentOperationArray = TestAndStoreSequence;
 			break;
 		case TestAndChargeOperation:
-			_currentFunction = TestAndChargeSequence;
+			_currentOperationArray = TestAndChargeSequence;
 			break;
 		case StorageOperation:
-			_currentFunction = StorageSequence;
+			_currentOperationArray = StorageSequence;
 			break;
 		case InternalResistanceOperation:
-			_currentFunction = InternalResistanceSequence;
+			_currentOperationArray = InternalResistanceSequence;
 			break;
 		case DischargeOperation:
-			_currentFunction = DischargeSequence;
+			_currentOperationArray = DischargeSequence;
 			break;
 		case MonitorOperation:
-			_currentFunction = MonitorSequence;
+			_currentOperationArray = MonitorSequence;
 			break;
 		default:
 			return;
@@ -92,9 +92,9 @@ namespace BatteryTester
 
 	State Tester::NextState()
 	{
-		if (_currentFunction != 0)
+		if (_currentOperationArray != 0)
 		{
-			State s = _currentFunction[_currentStage++];
+			State s = _currentOperationArray[_currentStage++];
 			logd("Battery(%d): NextState %s", _batteryPosition, States[s]);
 			return s;
 		}
@@ -180,7 +180,7 @@ namespace BatteryTester
 			case Initialize:
 				_dutyCycle = 64;
 				_errorState = Tester_Ok;
-				_currentFunction = 0;
+				_currentOperationArray = 0;
 				_currentStage = 0;
 				Load_Off();
 				TP4056_Off();
@@ -237,7 +237,7 @@ namespace BatteryTester
 			}
 			doc[Elements[Id::duration]] = _duration;
 		}
-		_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
+		_iot.publish(_batteryPosition, Subtopics[Subtopic::update], &doc, false);
 	}
 
 	void Tester::MQTTMonitor()
@@ -440,6 +440,7 @@ namespace BatteryTester
 		{
 			_cyclesCompleted++;
 			_duration = millis() - _operationTimeStamp;
+			setState(Standby);
 		}
 		}
 	}

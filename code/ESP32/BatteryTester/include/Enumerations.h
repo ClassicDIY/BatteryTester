@@ -64,10 +64,10 @@ namespace BatteryTester
 	{
 		operation,
 		mode,
-		monitor,
+		update,
 		config,
 		ping,
 		flash
 	};
-	static const char * const Subtopics[] = {"operation", "mode", "monitor", "config", "ping", "flash"};
+	static const char * const Subtopics[] = {"operation", "mode", "update", "config", "ping", "flash"};
 }

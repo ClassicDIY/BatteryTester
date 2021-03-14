@@ -33,7 +33,7 @@ def create_app(config_class=Config):
 
     @app.route("/")
     def render_index():
-        mqttClient.publish("monitor", "")
+        mqttClient.publish("update", "")
         return render_template(
             "index.html", operation="Monitor", cellCount=testers.value * 2
         )

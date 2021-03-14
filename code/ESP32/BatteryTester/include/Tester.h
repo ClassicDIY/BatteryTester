@@ -24,7 +24,6 @@ namespace BatteryTester
 		TesterError _errorState;
 		void Setup(ThreadController *controller);
 		void Perform(Operation op);
-		void PublishOutcome();
 		void PublishUpdate();
 		void setState(State state);
 		void run();
@@ -34,6 +33,7 @@ namespace BatteryTester
 		void SetChargeCurrent();
 		void MQTTMonitor();
 		uint8_t _batteryPosition; // 0 - 1;
+		uint8_t _pwmChannel;
 		uint8_t _tp4056Enable;
 		uint8_t _tp4056Standby;
 		uint8_t _chargeCurrent4k;
@@ -51,9 +51,10 @@ namespace BatteryTester
 		uint32_t _internalResistance;
 
 		Battery *_pBattery;
+		Operation _operation = noop;
 		State _state = Unspecified; // current state of operation 
 		int _currentStage; // index of the current state of execution
-		State* _currentOperation = 0;
+		State* _currentFunction = 0;
 		uint8_t _cycleCount = 0;
 
 		// the following variables are used to produce the outcome after multiple charge/discharge cycles

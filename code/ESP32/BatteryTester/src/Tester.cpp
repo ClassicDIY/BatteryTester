@@ -18,6 +18,7 @@ namespace BatteryTester
 				   uint8_t tp4056Enable, uint8_t i2cAddress, uint8_t load10mw, uint8_t tp4056Standby, uint8_t chargeCurrent4k, uint8_t chargeCurrent2k, uint8_t dischargeLed)
 	{
 		_batteryPosition = batteryPosition;
+		_pwmChannel = batteryPosition * 2; //pwm channel 0 or 2
 		_tp4056Enable = tp4056Enable;
 		_tp4056Standby = tp4056Standby;
 		_chargeCurrent4k = chargeCurrent4k;
@@ -29,8 +30,8 @@ namespace BatteryTester
 		pinMode(_chargeCurrent2k, OUTPUT);
 		pinMode(_dischargeLed, OUTPUT);
 		pinMode(_tp4056Standby, INPUT);
-		ledcSetup(_batteryPosition, PWMfrequency, PWMResolution); //PWM setup, use channel 0 or 1 equal to the battery position
-		ledcAttachPin(gatePin, _batteryPosition);
+		ledcSetup(_pwmChannel, PWMfrequency, PWMResolution); //PWM setup, use channel 0 or 1 equal to the battery position
+		ledcAttachPin(gatePin, _pwmChannel);
 		TP4056_Off();
 		Load_Off();
 		DischargeLed_Off();
@@ -54,32 +55,33 @@ namespace BatteryTester
 
 	void Tester::Perform(Operation op)
 	{
+		_operation = op;
 		switch (op)
 		{
 		case TestCycleOperation:
 			_cycleCount = _config.getChargeDischargeCycleCount();
-			_currentOperation = TestCycleSequence;
+			_currentFunction = TestCycleSequence;
 			break;
 		case ChargeOperation:
-			_currentOperation = ChargeSequence;
+			_currentFunction = ChargeSequence;
 			break;
 		case TestAndStoreOperation:
-			_currentOperation = TestAndStoreSequence;
+			_currentFunction = TestAndStoreSequence;
 			break;
 		case TestAndChargeOperation:
-			_currentOperation = TestAndChargeSequence;
+			_currentFunction = TestAndChargeSequence;
 			break;
 		case StorageOperation:
-			_currentOperation = StorageSequence;
+			_currentFunction = StorageSequence;
 			break;
 		case InternalResistanceOperation:
-			_currentOperation = InternalResistanceSequence;
+			_currentFunction = InternalResistanceSequence;
 			break;
 		case DischargeOperation:
-			_currentOperation = DischargeSequence;
+			_currentFunction = DischargeSequence;
 			break;
 		case MonitorOperation:
-			_currentOperation = MonitorSequence;
+			_currentFunction = MonitorSequence;
 			break;
 		default:
 			return;
@@ -90,9 +92,9 @@ namespace BatteryTester
 
 	State Tester::NextState()
 	{
-		if (_currentOperation != 0)
+		if (_currentFunction != 0)
 		{
-			State s = _currentOperation[_currentStage++];
+			State s = _currentFunction[_currentStage++];
 			logd("Battery(%d): NextState %s", _batteryPosition, States[s]);
 			return s;
 		}
@@ -178,7 +180,7 @@ namespace BatteryTester
 			case Initialize:
 				_dutyCycle = 64;
 				_errorState = Tester_Ok;
-				_currentOperation = 0;
+				_currentFunction = 0;
 				_currentStage = 0;
 				Load_Off();
 				TP4056_Off();
@@ -214,12 +216,27 @@ namespace BatteryTester
 	{
 		uint16_t temp = _pBattery->Temperature();
 		StaticJsonDocument<MaxMQTTPayload> doc;
-		uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : _pBattery->ChargeCurrent();
+		uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : (_state == FullCharge || _state == StorageCharge) ? _pBattery->ChargeCurrent() : 0;
+		doc[Subtopics[Subtopic::operation]] = _operation;
 		doc[Elements[Id::state]] = States[_state];
 		doc[Elements[Id::voltage]] = _pBattery->Voltage();
 		doc[Elements[Id::current]] = current;
 		doc[Elements[Id::temperature]] = temp;
 		doc[Elements[Id::stage]] = _currentStage;
+		if (_state == ThermalShutdown)
+		{
+			doc[Elements[Id::maxTemperature]] = _MaxTemperature;
+		}
+		else if (_state == Complete)
+		{
+			doc[Elements[Id::maxTemperature]] = _MaxTemperatureOfOperation;
+			if (_cyclesCompleted > 0)
+			{
+				doc[Elements[Id::capacity]] = _capacity / _cyclesCompleted;
+				doc[Elements[Id::internalResistance]] = _internalResistanceSummation / _cyclesCompleted;
+			}
+			doc[Elements[Id::duration]] = _duration;
+		}
 		_iot.publish(_batteryPosition, Subtopics[Subtopic::monitor], &doc, false);
 	}
 
@@ -255,11 +272,6 @@ namespace BatteryTester
 			{
 				logw("Battery(%d): ThermalShutdown at %d", _batteryPosition, temp);
 				setState(ThermalShutdown);
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::voltage]] = _pBattery->Voltage();
-				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 			}
 		}
 		switch (_state)
@@ -311,12 +323,6 @@ namespace BatteryTester
 			MQTTMonitor();
 			if (t > _config.getStabilizeDuration() * 1000)
 			{
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::voltage]] = _pBattery->Voltage();
-				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-				doc[Elements[Id::duration]] = t / 1000;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 				setState(NextState());
 			}
 		}
@@ -334,12 +340,6 @@ namespace BatteryTester
 				delay(500);
 				if (_pBattery->CheckForBattery())
 				{
-					StaticJsonDocument<MaxMQTTPayload> doc;
-					doc[Elements[Id::state]] = States[_state];
-					doc[Elements[Id::capacity]] = _mAs / 3600;
-					doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-					doc[Elements[Id::duration]] = millis() - _stateChangeTimeStamp / 1000;
-					_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 					setState(NextState());
 				}
 			}
@@ -350,7 +350,7 @@ namespace BatteryTester
 			_pBattery->enabled = false;
 			Load_Off();
 			uint16_t voc = _pBattery->OpenVoltage();
-			ledcWrite(_batteryPosition, 255); // full load
+			ledcWrite(_pwmChannel, 255); // full load
 			delay(200);
 			_pBattery->MMA();
 			uint32_t iMax = _pBattery->DischargeCurrent();
@@ -373,11 +373,6 @@ namespace BatteryTester
 				logd("Battery(%d): InternalResistance  %d", _batteryPosition, _internalResistance);
 				logd("Battery(%d): voc %d, vLoad %d, iMax %d", _batteryPosition, voc, vLoad, iMax);
 				_internalResistanceSummation += _internalResistance;
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::internalResistance]] = _internalResistance;
-				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 			}
 			setState(NextState());
 		}
@@ -410,14 +405,7 @@ namespace BatteryTester
 				DischargeLed_Off();
 				if (_pBattery->CheckForBattery())
 				{
-					StaticJsonDocument<MaxMQTTPayload> doc;
-					doc[Elements[Id::state]] = States[_state];
 					_capacity = _mAs / 3600;
-					doc[Elements[Id::capacity]] = _capacity;
-					doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-					unsigned long duration = millis() - _stateChangeTimeStamp / 1000;
-					doc[Elements[Id::duration]] = duration;
-					_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 					logd(" Battery(%d): Discharge done! duration %d capacity %d", _batteryPosition, duration, _capacity);
 					setState(NextState());
 				}
@@ -429,13 +417,6 @@ namespace BatteryTester
 			MQTTMonitor();
 			if (_pBattery->Voltage() >= _config.getStorageVoltage())
 			{
-				unsigned long t = millis() - _stateChangeTimeStamp;
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::voltage]] = _pBattery->Voltage();
-				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-				doc[Elements[Id::duration]] = t / 1000;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 				setState(NextState());
 			}
 		}
@@ -445,21 +426,12 @@ namespace BatteryTester
 			_cycleCount--;
 			if (_cycleCount > 0)
 			{
-				unsigned long t = millis() - _stateChangeTimeStamp;
-				StaticJsonDocument<MaxMQTTPayload> doc;
-				doc[Elements[Id::state]] = States[_state];
-				doc[Elements[Id::voltage]] = _pBattery->Voltage();
-				doc[Elements[Id::cycle]] = _cycleCount;
-				doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-				doc[Elements[Id::duration]] = t / 1000;
-				_iot.publish(_batteryPosition, Subtopics[Subtopic::result], &doc, false);
 				_currentStage = 1; // start over, skip initialize
 				_cyclesCompleted++;
 				setState(NextState());
 			}
 			else
 			{
-				_duration = millis() - _operationTimeStamp;
 				setState(Complete);
 			}
 		}
@@ -468,7 +440,6 @@ namespace BatteryTester
 		{
 			_cyclesCompleted++;
 			_duration = millis() - _operationTimeStamp;
-			setState(Standby);
 		}
 		}
 	}
@@ -490,12 +461,12 @@ namespace BatteryTester
 
 	void Tester::Load_Off()
 	{
-		ledcWrite(_batteryPosition, 0);
+		ledcWrite(_pwmChannel, 0);
 	}
 
 	void Tester::Load_On()
 	{
-		ledcWrite(_batteryPosition, _dutyCycle);
+		ledcWrite(_pwmChannel, _dutyCycle);
 	}
 
 	void Tester::DischargeLed_Off()
@@ -533,18 +504,5 @@ namespace BatteryTester
 		}
 	}
 
-	void Tester::PublishOutcome()
-	{
-		StaticJsonDocument<MaxMQTTPayload> doc;
-		doc[Elements[Id::cycle]] = _cyclesCompleted;
-		doc[Elements[Id::maxTemperature]] = _MaxTemperatureOfOperation;
-		if (_cyclesCompleted > 0)
-		{
-			doc[Elements[Id::capacity]] = _capacity / _cyclesCompleted;
-			doc[Elements[Id::internalResistance]] = _internalResistanceSummation / _cyclesCompleted;
-		}
-		doc[Elements[Id::duration]] = _duration;
-		_iot.publish(_batteryPosition, Subtopics[Subtopic::outcome], &doc, false);
-	}
 
 } // namespace BatteryTester

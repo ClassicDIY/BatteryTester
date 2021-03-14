@@ -61,9 +61,6 @@ class my_mqtt:
         elif "mode" in message.topic:
             theMessage = Message("mode", json.dumps(json.loads(msg)))
             theQueue.put(theMessage)
-        elif "result" in message.topic:
-            theMessage = Message("result", json.dumps(json.loads(msg)))
-            theQueue.put(theMessage)
 
     @mqtt.on_topic("{}/tele/#".format(mqttRoot))
     def handle_stat(client, userdata, message):

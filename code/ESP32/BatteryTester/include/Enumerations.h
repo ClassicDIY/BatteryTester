@@ -30,6 +30,7 @@ namespace BatteryTester
 
 	enum Operation
 	{
+		noop,
 		MonitorOperation,
 		TestCycleOperation,
 		ChargeOperation,
@@ -39,7 +40,7 @@ namespace BatteryTester
 		InternalResistanceOperation,
 		DischargeOperation,
 	};
-	static const char * const Operations[] = {"Monitor", "TestCycle", "Charge", "TestAndStore", "TestAndCharge", "Storage", "InternalResistance", "Discharge"};
+	static const char * const Operations[] = {"noop", "Monitor", "TestCycle", "Charge", "TestAndStore", "TestAndCharge", "Storage", "InternalResistance", "Discharge"};
 
 	// json key string to enum
 	enum Id
@@ -61,14 +62,12 @@ namespace BatteryTester
 
 	enum Subtopic
 	{
-		result,
 		operation,
 		mode,
 		monitor,
 		config,
 		ping,
-		outcome,
 		flash
 	};
-	static const char * const Subtopics[] = {"result", "operation", "mode", "monitor", "config", "ping", "outcome", "flash"};
+	static const char * const Subtopics[] = {"operation", "mode", "monitor", "config", "ping", "flash"};
 }

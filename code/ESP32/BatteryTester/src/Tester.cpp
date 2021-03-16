@@ -135,21 +135,18 @@ namespace BatteryTester
 				DischargeLed_Off();
 				break;
 			case FullCharge:
-				_MaxTemperature = 0;
 				Load_Off();
 				TP4056_On();
 				DischargeLed_Off();
 				SetChargeCurrent();
 				break;
 			case Discharge:
-				_MaxTemperature = 0;
 				_dutyCycle = 128;
 				TP4056_Off();
 				Load_On();
 				DischargeLed_On();
 				break;
 			case StorageCharge:
-				_MaxTemperature = 0;
 				Load_Off();
 				TP4056_On();
 				SetChargeCurrent();
@@ -165,14 +162,12 @@ namespace BatteryTester
 				DischargeLed_Off();
 				break;
 			case Monitor:
-				_MaxTemperature = 0;
 				_currentStage = 0;
 				Load_Off();
 				TP4056_Off();
 				DischargeLed_Off();
 				break;
 			case Stabilize:
-				_MaxTemperature = 0;
 				Load_Off();
 				TP4056_Off();
 				DischargeLed_Off();
@@ -217,27 +212,31 @@ namespace BatteryTester
 		uint16_t temp = _pBattery->Temperature();
 		StaticJsonDocument<MaxMQTTPayload> doc;
 		uint16_t current = (_state == Discharge) ? _pBattery->DischargeCurrent() : (_state == FullCharge || _state == StorageCharge) ? _pBattery->ChargeCurrent() : 0;
-		doc[Subtopics[Subtopic::operation]] = _operation;
 		doc[Elements[Id::state]] = States[_state];
 		doc[Elements[Id::voltage]] = _pBattery->Voltage();
 		doc[Elements[Id::current]] = current;
 		doc[Elements[Id::temperature]] = temp;
 		doc[Elements[Id::stage]] = _currentStage;
-		if (_state == ThermalShutdown)
-		{
-			doc[Elements[Id::maxTemperature]] = _MaxTemperature;
-		}
-		else if (_state == Complete)
-		{
-			doc[Elements[Id::maxTemperature]] = _MaxTemperatureOfOperation;
-			if (_cyclesCompleted > 0)
-			{
-				doc[Elements[Id::capacity]] = _capacity / _cyclesCompleted;
-				doc[Elements[Id::internalResistance]] = _internalResistanceSummation / _cyclesCompleted;
-			}
-			doc[Elements[Id::duration]] = _duration;
-		}
+		doc[Elements[Id::maxTemperature]] = _MaxTemperature;
+		doc[Elements[Id::duration]] = _duration == 0 ? millis() - _operationTimeStamp : _duration;
 		_iot.publish(_batteryPosition, Subtopics[Subtopic::update], &doc, false);
+	}
+	
+	// publish result of test with retain on
+	void Tester::PublishOutcome()
+	{
+		StaticJsonDocument<MaxMQTTPayload> doc;
+		if (_cyclesCompleted > 1)
+		{
+			doc[Elements[Id::capacity]] = _capacity / _cyclesCompleted;
+			doc[Elements[Id::internalResistance]] = _internalResistanceSummation / _cyclesCompleted;
+		}
+		else
+		{
+			doc[Elements[Id::capacity]] = _capacity;
+			doc[Elements[Id::internalResistance]] = _internalResistanceSummation;
+		}
+		_iot.publish(_batteryPosition, Subtopics[Subtopic::outcome], &doc, true);
 	}
 
 	void Tester::MQTTMonitor()
@@ -263,10 +262,6 @@ namespace BatteryTester
 			if (temp > _MaxTemperature) //max temperature of current function
 			{
 				_MaxTemperature = temp;
-			}
-			if (temp > _MaxTemperatureOfOperation) //max temperature across all functions of operation
-			{
-				_MaxTemperatureOfOperation = temp;
 			}
 			if (temp >= _config.getThermalShutdownTemperature())
 			{
@@ -294,8 +289,9 @@ namespace BatteryTester
 			_internalResistance = 0;
 			_cyclesCompleted = 0;
 			_capacity = 0;
+			_duration = 0;
 			_internalResistanceSummation = 0;
-			_MaxTemperatureOfOperation = 0;
+			PublishOutcome(); // clear retain data for new test run
 			_operationTimeStamp = millis();
 			setState(NextState());
 			break;
@@ -440,6 +436,7 @@ namespace BatteryTester
 		{
 			_cyclesCompleted++;
 			_duration = millis() - _operationTimeStamp;
+			PublishUpdate();
 			setState(Standby);
 		}
 		}

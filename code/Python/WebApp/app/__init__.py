@@ -34,6 +34,7 @@ def create_app(config_class=Config):
     @app.route("/")
     def render_index():
         mqttClient.publish("update", "")
+        mqttClient.publish("outcome", "")
         return render_template(
             "index.html", operation="Monitor", cellCount=testers.value * 2
         )
@@ -47,7 +48,7 @@ def create_app(config_class=Config):
     @app.route("/operation", methods=["POST"])
     def operation():
         current_operation = request.form.get("operation")
-        mqttClient.publish("operation", current_operation)
+        mqttClient.publish("operation", current_operation, 0, True)
         return jsonify(status="success")
 
     @app.route("/listen")

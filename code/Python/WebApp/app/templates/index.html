@@ -49,6 +49,19 @@
         // console.log(e.data)
         // }, false)
 
+        function msToTime(duration) {
+            var milliseconds = parseInt((duration % 1000) / 100),
+                seconds = Math.floor((duration / 1000) % 60),
+                minutes = Math.floor((duration / (1000 * 60)) % 60),
+                hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+            hours = (hours < 10) ? "0" + hours : hours;
+            minutes = (minutes < 10) ? "0" + minutes : minutes;
+            seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+            return hours + ":" + minutes + ":" + seconds;
+        }
+
         var colours = {"Standby":"#bfbf0a","NoBatteryFound":"#7d807f","Monitor":"#1229c4","Stabilize":"#a912c4", "InternalResistance":"#c44d12","FullCharge":"#2fff05","Discharge":"#bf0a0a","StorageCharge":"#bf7a0a","ThermalShutdown":"#bf0a68","Complete":"#646b66"} 
 
         eventSource.addEventListener("update", function(e) {
@@ -61,22 +74,25 @@
                 document.querySelector("#current"+data.index).innerText = data.current + ' mA';
             }
             if ('temperature' in data) {
-                document.querySelector("#temperature"+data.index).innerText = data.temperature/10.0 + ' °C';
+                document.querySelector("#temperature"+data.index).innerText = data.temperature == 65535 ? "-" : data.temperature/10.0 + ' °C';
             }
             if ('maxTemperature' in data) {
                 document.querySelector("#maxtemperature"+data.index).innerText = data.maxTemperature/10.0 + ' °C';
             }
             if ('duration' in data) {
-                document.querySelector("#time"+data.index).innerText = data.duration;
+                document.querySelector("#time"+data.index).innerText = msToTime(data.duration);
             }
+            if (typeof colours[data.state] != 'undefined') {
+                document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
+            }
+        }, true)
+        eventSource.addEventListener("outcome", function(e) {
+            data = JSON.parse(e.data)
             if ('capacity' in data) {
                 document.querySelector("#capacity"+data.index).innerText = data.capacity + 'mAh';
             }
             if ('internalResistance' in data) {
                 document.querySelector("#resistance"+data.index).innerText = data.internalResistance + ' mΩ';
-            }
-            if (typeof colours[data.state] != 'undefined') {
-                document.querySelector("#colour"+data.index).style.backgroundColor= colours[data.state];
             }
         }, true)
 

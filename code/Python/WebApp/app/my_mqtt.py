@@ -34,12 +34,12 @@ class my_mqtt:
         mqtt.subscribe("{}/tele/#".format(mqttRoot))
         mqtt.subscribe("{}/cmnd/#".format(mqttRoot))
 
-    def publish(self, subtopic, data):
+    def publish(self, subtopic, data, qos: int = 0, retain: bool = False):
         topic = "{}/cmnd/{}".format(mqttRoot, subtopic)
         log.debug("Publishing: {} ".format(topic))
         
         try:
-            mqtt.publish(topic, data)
+            mqtt.publish(topic, data, qos, retain)
             return True
         except Exception as e:
             log.error("MQTT Publish Error Topic:{}".format(topic))
@@ -57,6 +57,9 @@ class my_mqtt:
         log.debug("Received STAT  {} : {}".format(message.topic, msg))
         if "update" in message.topic:
             theMessage = Message("update", json.dumps(json.loads(msg)))
+            theQueue.put(theMessage)
+        elif "outcome" in message.topic:
+            theMessage = Message("outcome", json.dumps(json.loads(msg)))
             theQueue.put(theMessage)
         elif "mode" in message.topic:
             theMessage = Message("mode", json.dumps(json.loads(msg)))

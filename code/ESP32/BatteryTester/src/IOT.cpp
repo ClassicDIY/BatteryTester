@@ -53,8 +53,15 @@ namespace BatteryTester
 		config["ChargeDischargeCycleCount"] = _config.getChargeDischargeCycleCount();
 		_JSdoc["Config"] = config;
 		serializeJson(_JSdoc, s);
-		_mqttClient.publish(buf, 0, false, s.c_str());
-		_mqttClient.publish(_willTopic, 0, false, "Online");
+		try
+		{
+			_mqttClient.publish(buf, 0, false, s.c_str());
+			_mqttClient.publish(_willTopic, 0, false, "Online");
+		}
+		catch(const std::exception& ex)
+		{
+			loge("Exception from NQTT publish: %s", ex.what());
+		}
 	}
 
 	void onMqttConnect(bool sessionPresent)
@@ -87,6 +94,7 @@ namespace BatteryTester
 	void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 	{
 		logw("Disconnected from MQTT. Reason: %d", (int8_t)reason);
+		xTimerStart(mqttReconnectTimer, 0);
 	}
 
 	void connectToMqtt()
@@ -104,8 +112,10 @@ namespace BatteryTester
 		String s;
 		switch (event)
 		{
-		case SYSTEM_EVENT_STA_GOT_IP:
+		case SYSTEM_EVENT_STA_GOT_IP: //7
 			logd("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
+			_tester1.enabled = true;
+			_tester2.enabled = true;
 			_JSdoc.clear();
 			_JSdoc["IP"] = WiFi.localIP().toString().c_str();
 			_JSdoc["ApPassword"] = TAG;
@@ -116,21 +126,18 @@ namespace BatteryTester
 			printLocalTime();
 			xTimerStart(mqttReconnectTimer, 0);
 			break;
-		case SYSTEM_EVENT_STA_DISCONNECTED:
+		case SYSTEM_EVENT_STA_DISCONNECTED: //5
 			logw("WiFi lost connection");
+			_tester1.enabled = false;
+			_tester2.enabled = false;
 			xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
 			break;
-		case SYSTEM_EVENT_STA_STOP:
+		case SYSTEM_EVENT_STA_STOP: //3
 			logw("WiFi stopped");
 			break;
 		default:
 			break;
 		}
-	}
-
-	void onMqttPublish(uint16_t packetId)
-	{
-		logd("Publish acknowledged.  packetId: %d", packetId);
 	}
 
 	void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
@@ -361,7 +368,6 @@ namespace BatteryTester
 				_mqttClient.onConnect(onMqttConnect);
 				_mqttClient.onDisconnect(onMqttDisconnect);
 				_mqttClient.onMessage(onMqttMessage);
-				_mqttClient.onPublish(onMqttPublish);
 				IPAddress ip;
 				if (ip.fromString(_mqttServer))
 				{
@@ -431,17 +437,24 @@ namespace BatteryTester
 
 	void IOT::publish(uint8_t pos, const char *subtopic, StaticJsonDocument<MaxMQTTPayload> *doc, boolean retained)
 	{
-		if (_mqttClient.connected())
+		try
 		{
-			char buf[MaxMQTTTopic];
-			sprintf(buf, "%s/stat/%s/%s", _mqttRootTopic, _mqttTesterNumber, subtopic);
-			int testerIndex = (atoi(_mqttTesterNumber) - 1) * 2; // 2 cells per tester * testerNumber origin 0
-			(*doc)[Elements[Id::index]] = testerIndex + pos;	 // cell index (origin 0) out of all testers
-			(*doc)[Elements[Id::cell]] = pos;					 // battery cell position (0 or 1) in this tester
-			String s;
-			serializeJson(*doc, s);
-			logd("publish %s|%s", buf, s.c_str());
-			_mqttClient.publish(buf, 0, retained, s.c_str());
+			if (_mqttClient.connected())
+			{
+				char buf[MaxMQTTTopic];
+				sprintf(buf, "%s/stat/%s/%s", _mqttRootTopic, _mqttTesterNumber, subtopic);
+				int testerIndex = (atoi(_mqttTesterNumber) - 1) * 2; // 2 cells per tester * testerNumber origin 0
+				(*doc)[Elements[Id::index]] = testerIndex + pos;	 // cell index (origin 0) out of all testers
+				(*doc)[Elements[Id::cell]] = pos;					 // battery cell position (0 or 1) in this tester
+				String s;
+				serializeJson(*doc, s);
+				logd("publish %s|%s", buf, s.c_str());
+				_mqttClient.publish(buf, 0, retained, s.c_str());
+			}
+		}
+		catch(const std::exception& ex)
+		{
+			loge("Exception from NQTT publish: %s", ex.what());
 		}
 	}
 

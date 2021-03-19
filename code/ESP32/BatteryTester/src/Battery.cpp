@@ -10,7 +10,7 @@ namespace BatteryTester
 		pinMode(highBatPin, INPUT_PULLUP);
 		pinMode(shuntPin, INPUT);
 		pinMode(_lowLoad, OUTPUT_OPEN_DRAIN);
-		LowLoad_Off();
+		LowLoad_On();
 		_tempsensor.begin(i2cAddress);
 		_highBat.attach(highBatPin);
 		_shunt.attach(shuntPin);

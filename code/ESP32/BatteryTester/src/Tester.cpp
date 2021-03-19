@@ -236,6 +236,7 @@ namespace BatteryTester
 			doc[Elements[Id::capacity]] = _capacity;
 			doc[Elements[Id::internalResistance]] = _internalResistanceSummation;
 		}
+		doc[Subtopics[Subtopic::operation]] = Operations[_operation];
 		_iot.publish(_batteryPosition, Subtopics[Subtopic::outcome], &doc, true);
 	}
 
@@ -354,7 +355,7 @@ namespace BatteryTester
 			Load_Off();
 			_pBattery->enabled = true;
 			_internalResistance = (voc - vLoad);
-			_internalResistance *= 1000;
+			_internalResistance *= 600; // ohm to milliohm * offset factor of 0.6
 			if (iMax <= 0)
 			{
 				logw("Battery(%d): InternalResistance failed!!! voc %d, vLoad %d, iMax %d", _batteryPosition, voc, vLoad, iMax);

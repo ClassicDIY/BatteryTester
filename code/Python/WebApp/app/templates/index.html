@@ -89,10 +89,13 @@
         eventSource.addEventListener("outcome", function(e) {
             data = JSON.parse(e.data)
             if ('capacity' in data) {
-                document.querySelector("#capacity"+data.index).innerText = data.capacity + 'mAh';
+                document.querySelector("#capacity"+data.index).innerText = data.capacity == 0 ? "-" : data.capacity + ' mAh';
             }
             if ('internalResistance' in data) {
-                document.querySelector("#resistance"+data.index).innerText = data.internalResistance + ' mΩ';
+                document.querySelector("#resistance"+data.index).innerText = data.internalResistance == 0 ? "-" : data.internalResistance + ' mΩ';
+            }
+            if ('operation' in data) {
+                document.querySelector("#operation").innerText = data.operation;
             }
         }, true)
 
